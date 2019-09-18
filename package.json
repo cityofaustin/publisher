@@ -1,0 +1,8 @@
+{
+  "name": "publisher",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:cityofaustin/publisher.git",
+  "author": "Niicck <niicck@users.noreply.github.com>",
+  "license": "MIT"
+}
