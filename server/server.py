@@ -8,12 +8,14 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
     def handle(self):
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
-        self.data = self.rfile.readline().strip()
+        self.data = self.rfile.readline().strip().decode("utf-8")
         print(f"{self.client_address[0]} wrote:")
         print(self.data)
         # Likewise, self.wfile is a file-like object used to write back
         # to the client
-        self.wfile.write(self.data.upper())
+        self.wfile.write(bytes(self.data.upper(), "utf-8"))
+        self.wfile.write(bytes(self.data.upper() + " again", "utf-8"))
+
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 9999
