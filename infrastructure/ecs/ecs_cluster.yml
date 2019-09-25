@@ -80,9 +80,11 @@ Resources:
   # account on your behalf, such as updating your load balancer with the
   # details of where your containers are, so that traffic can reach your
   # containers.
+  # TODO: is this required if I don't have a load balancer?
   ECSRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: 'coa-publisher-ecs'
       AssumeRolePolicyDocument:
         Statement:
         - Effect: Allow

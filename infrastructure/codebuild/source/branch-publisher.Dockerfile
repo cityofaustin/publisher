@@ -1,4 +1,4 @@
-FROM cityofaustin/publisher-base:staging-latest
+FROM cityofaustin/branch-publisher-base:staging-latest
 
 ARG JANIS_BRANCH
 ARG DEST

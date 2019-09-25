@@ -1,0 +1,44 @@
+Resources:
+  # Create a CodeBuild Project to launch new branch-publisher containers
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: "coa-publisher-builder"
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:2.0
+      Source:
+        Type: S3
+        Location: coa-publisher-codebuild/${env:DEPLOY_ENV}/source
+        BuildSpec: './buildspec.yml'
+      TimeoutInMinutes: 10
+      Cache:
+        Type: S3
+        Location: coa-publisher-codebuild/${env:DEPLOY_ENV}/cache
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: 'coa-publisher-codebuild'
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [codebuild.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: AmazonECSTaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+            - Effect: Allow
+              Action:
+                # retrieve custom environment variables stored in Amazon EC2 Systems Manager Parameter Store
+                - 'ssm:GetParameters'
+                # Allow the ECS tasks to upload logs to CloudWatch
+                - 'logs:*'
+              Resource: '*'
