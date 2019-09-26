@@ -1,2 +1,8 @@
 # misc
 .DS_Store
+
+# cloudformation artifacts
+start-build.json
+
+# dev
+local

@@ -1,9 +1,17 @@
+Parameters:
+  Env:
+    Type: String
+    Default: staging
+    AllowedValues:
+      - staging
+      - prod
+
 Resources:
-  # Create a CodeBuild Project to launch new branch-publisher containers
+  # Create a CodeBuild Project to build new branch-publisher images
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: "coa-publisher-builder"
+      Name: !Join [ '-', [ 'coa-branch-publisher-builder', !Ref Env ] ]
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
         Type: NO_ARTIFACTS
@@ -11,14 +19,16 @@ Resources:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/standard:2.0
+        PrivilegedMode: true # Required for building docker images and LOCAL caching
       Source:
         Type: S3
-        Location: coa-publisher-codebuild/${env:DEPLOY_ENV}/source
+        Location: !Join [ '/', ['coa-publisher-codebuild', !Ref Env, 'source/'] ]
         BuildSpec: './buildspec.yml'
       TimeoutInMinutes: 10
       Cache:
-        Type: S3
-        Location: coa-publisher-codebuild/${env:DEPLOY_ENV}/cache
+        Type: LOCAL # Caches Docker layers on AWS Host build machine
+        Modes:
+          - LOCAL_DOCKER_LAYER_CACHE
 
   CodeBuildRole:
     Type: AWS::IAM::Role
@@ -42,3 +52,13 @@ Resources:
                 # Allow the ECS tasks to upload logs to CloudWatch
                 - 'logs:*'
               Resource: '*'
+            - Effect: Allow
+              Action:
+                # allow reading from coa-publisher-codebuild s3 bucket
+                - 's3:ListBucket'
+              Resource: 'arn:aws:s3:::coa-publisher-codebuild'
+            - Effect: Allow
+              Action:
+                # allow reading from coa-publisher-codebuild s3 bucket
+                - 's3:GetObject'
+              Resource: 'arn:aws:s3:::coa-publisher-codebuild/*'
