@@ -28,6 +28,8 @@ phases:
       - docker build
         -f ./branch-publisher.Dockerfile
         -t $TAG
+        --build-arg AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
+        --build-arg AWS_CONTAINER_CREDENTIALS_RELATIVE_URI=$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
         --build-arg JANIS_BRANCH=$JANIS_BRANCH
         --build-arg JOPLIN_BRANCH=$JOPLIN_BRANCH
         --build-arg DEST=$DEST

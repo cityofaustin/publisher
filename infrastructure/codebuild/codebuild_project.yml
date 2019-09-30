@@ -22,7 +22,7 @@ Resources:
         PrivilegedMode: true # Required for building docker images and LOCAL caching
       Source:
         Type: S3
-        Location: !Join [ '/', ['coa-publisher-codebuild', !Ref Env, 'source/'] ]
+        Location: !Join [ '', ['coa-publisher-codebuild/source/', !Ref Env, '/'] ]
         BuildSpec: './buildspec.yml'
       TimeoutInMinutes: 10
       Cache:
@@ -59,6 +59,9 @@ Resources:
               Resource: 'arn:aws:s3:::coa-publisher-codebuild'
             - Effect: Allow
               Action:
-                # allow reading from coa-publisher-codebuild s3 bucket
+                # allow GET/PUT for objects in coa-publisher-codebuild s3 bucket
+                - 's3:GetBucketLocation'
                 - 's3:GetObject'
+                - 's3:DeleteObject'
+                - 's3:PutObject'
               Resource: 'arn:aws:s3:::coa-publisher-codebuild/*'

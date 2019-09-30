@@ -11,7 +11,7 @@ fi
 # Step 1.
 # Sync files to be used as codebuild source
 # codebuild looks in S3 to get the Dockerfile used to build branch-publisher containers
-S3_DESTINATION="s3://coa-publisher-codebuild/$DEPLOY_ENV/source"
+S3_DESTINATION="s3://coa-publisher-codebuild/source/$DEPLOY_ENV"
 echo "Syncing local source into $S3_DESTINATION"
 aws s3 sync $LOCAL_SOURCE_DIR $S3_DESTINATION --delete
 
@@ -20,7 +20,7 @@ aws s3 sync $LOCAL_SOURCE_DIR $S3_DESTINATION --delete
 # Environment variables will be overwritten as needed to build specific Janis + Joplin combinations
 # --capabilities CAPABILITY_NAMED_IAM is a flag that specifies that you want to create a new IAM Role in your stack.
 aws cloudformation deploy \
-  --template-file $CD/codebuild_project.yml \
   --stack-name coa-publisher-codebuild-$DEPLOY_ENV \
+  --template-file $CD/codebuild_project.yml \
   --parameter-overrides Env=$DEPLOY_ENV \
   --capabilities CAPABILITY_NAMED_IAM
