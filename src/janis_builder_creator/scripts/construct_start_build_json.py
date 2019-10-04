@@ -1,7 +1,7 @@
 import os, json
 
 start_build_config = {
-    "projectName": f'coa-branch-publisher-builder-{os.getenv("DEPLOY_ENV")}',
+    "projectName": f'coa-publisher-janis-builder-creator-{os.getenv("DEPLOY_ENV")}',
     "environmentVariablesOverride": [
         {
             "name": "JANIS_BRANCH",

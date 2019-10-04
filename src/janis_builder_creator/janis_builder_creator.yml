@@ -11,7 +11,7 @@ Resources:
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Join [ '-', [ 'coa-branch-publisher-builder', !Ref Env ] ]
+      Name: !Join [ '-', [ 'coa-publisher-janis-builder-creator', !Ref Env ] ]
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
         Type: NO_ARTIFACTS
@@ -22,7 +22,7 @@ Resources:
         PrivilegedMode: true # Required for building docker images and LOCAL caching
       Source:
         Type: S3
-        Location: !Join [ '', ['coa-publisher-codebuild/source/', !Ref Env, '/'] ]
+        Location: !Join [ '', ['coa-publisher/source/', !Ref Env, '/'] ]
         BuildSpec: './buildspec.yml'
       TimeoutInMinutes: 10
       Cache:
@@ -33,7 +33,7 @@ Resources:
   CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: 'coa-publisher-codebuild'
+      RoleName: 'coa-publisher-janis-builder-creator'
       AssumeRolePolicyDocument:
         Statement:
         - Effect: Allow
@@ -56,7 +56,7 @@ Resources:
               Action:
                 # allow reading from coa-publisher-codebuild s3 bucket
                 - 's3:ListBucket'
-              Resource: 'arn:aws:s3:::coa-publisher-codebuild'
+              Resource: 'arn:aws:s3:::coa-publisher'
             - Effect: Allow
               Action:
                 # allow GET/PUT for objects in coa-publisher-codebuild s3 bucket
@@ -64,4 +64,4 @@ Resources:
                 - 's3:GetObject'
                 - 's3:DeleteObject'
                 - 's3:PutObject'
-              Resource: 'arn:aws:s3:::coa-publisher-codebuild/*'
+              Resource: 'arn:aws:s3:::coa-publisher/*'

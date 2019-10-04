@@ -1,4 +1,4 @@
-FROM cityofaustin/branch-publisher-base:staging-latest
+FROM cityofaustin/janis-builder-base:staging-latest
 
 # Pass aws cli credentials during build
 ARG AWS_DEFAULT_REGION

@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 client = boto3.client('s3')
 try:
     response = client.head_object(
-        Bucket="coa-publisher-codebuild",
+        Bucket="coa-publisher",
         Key=f'cache/{os.getenv("JANIS_BRANCH")}/yarn.lock'
     )
 except ClientError as e:
