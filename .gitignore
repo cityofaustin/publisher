@@ -4,5 +4,8 @@
 # cloudformation artifacts
 start-build.json
 
+# Environment Variables
+.env
+
 # dev
 local
