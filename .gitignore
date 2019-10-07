@@ -1,8 +1,9 @@
 # misc
 .DS_Store
 
-# cloudformation artifacts
+# Build Artifacts
 start-build.json
+src/janis_builder_base/requirements.txt
 
 # Environment Variables
 .env

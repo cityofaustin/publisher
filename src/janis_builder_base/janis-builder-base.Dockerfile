@@ -12,9 +12,6 @@ RUN apt-get update && apt-get install yarn
 # Install other dependencies
 RUN apt-get update && apt-get install -y git
 
-# Install python libraries
-RUN pip install awscli==1.16.248 boto3==1.9.238 botocore==1.12.238
-
 # Create directories
 RUN mkdir src
 RUN mkdir src/cache
@@ -24,3 +21,9 @@ WORKDIR /src
 COPY "./scripts/publish.sh" .
 COPY "./scripts/cache_exists.py" .
 COPY "./scripts/install_yarn_dependencies.sh" .
+COPY "./scripts/hello.html" .
+
+
+# Install python libraries
+COPY "./requirements.txt" .
+RUN pip install -r requirements.txt

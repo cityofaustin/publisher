@@ -9,7 +9,8 @@ fi
 
 # Deploys a new staging janis-builder-base docker image to the City of Austin dockerhub
 TAG="cityofaustin/janis-builder-base:$DEPLOY_ENV-latest"
-docker build -f $CD/janis-builder-base.Dockerfile -t $TAG $CD
+pipenv lock --requirements > $CD/requirements.txt
+docker build -f $CD/janis-builder-base.Dockerfile -t $TAG $CD/../..
 docker push $TAG
 
 # cityofaustin/janis-builder-base is used exclusively by codebuild as the base image to build new janis-builder images.
