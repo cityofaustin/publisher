@@ -10,3 +10,4 @@ src/janis_builder_base/requirements.txt
 
 # dev
 local
+dist
