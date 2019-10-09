@@ -1,7 +1,10 @@
 import os, json, requests, hashlib
 from pprint import pprint
 
-site_name = f'janis-{os.getenv("JANIS_BRANCH")}'
+janis_branch = os.getenv("JANIS_BRANCH")
+joplin_branch = os.getenv("JOPLIN_BRANCH")
+
+site_name = f'janis-{janis_branch}-33'
 netlify_url = "https://api.netlify.com/api/v1"
 headers = {
     "Authorization": f"Bearer {os.getenv('NETLIFY_AUTH_TOKEN')}",
@@ -30,14 +33,12 @@ if not site_id:
             "repo": {
                 "provider": "github",
                 "repo": "cityofaustin/janis",
-                "private": "false",
-                "branch": os.getenv("JANIS_BRANCH"),
-                "cmd": "yarn build-joplin-cloud",
-                "dir": "dist"
+                "private": False,
+                "branch": janis_branch,
+                "cmd": "yarn publish-netlify-pr",
+                "dir": "dist",
+                "installation_id": int(os.getenv('NETLIFY_GITHUB_INSTALLATION_ID')),
             },
-            "build_settings": {
-                "skip_prs": "true"
-            }
         }),
         headers=headers,
     ).json()['site_id']
@@ -47,7 +48,7 @@ if not site_id:
         url=f"{netlify_url}/sites/{site_id}",
         data=json.dumps({
             "build_settings": {
-                "skip_prs": "true"
+                "skip_prs": True,
             }
         }),
         headers=headers,
@@ -81,10 +82,17 @@ if not build_hook_url:
 
 print(f"~~ Our build_hook_url: {build_hook_url}")
 
-# Create a site deploy
-data = {
-    "async": "true",
-    "files": {
-        "/index.html": "907d14fb3af2b0d4f18c2d46abe8aedce17367bd",
+print("~~~ Running the build_hook!")
+
+# Trigger the build hook
+requests.post(
+    url=build_hook_url,
+    params={
+        "trigger_branch": janis_branch,
+        "trigger_title": f"triggered by publish from {joplin_branch}"
     },
-}
+    data=json.dumps({
+        "name": "derpderp",
+    }),
+    headers=headers,
+)

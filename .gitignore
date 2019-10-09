@@ -4,6 +4,7 @@
 # Build Artifacts
 start-build.json
 src/janis_builder_base/requirements.txt
+zappa_settings.json
 
 # Environment Variables
 .env
