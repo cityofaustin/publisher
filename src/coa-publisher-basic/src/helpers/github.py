@@ -3,8 +3,8 @@ import requests
 # Check if janis_branch is a real janis branch on our github repo
 def validate_janis_branch(janis_branch):
     is_branch_valid = False
-    more_branches=True
-    github_pagination=1
+    more_branches = True
+    github_pagination = 1
     while more_branches:
         # Paginated query for github branches on cityofaustin repo
         github_res = requests.get(
@@ -13,7 +13,7 @@ def validate_janis_branch(janis_branch):
 
         # Check if there is another page of branches to query
         github_res_link = requests.utils.parse_header_links(github_res.headers["link"])
-        more_branches=False
+        more_branches = False
         for x in github_res_link:
             if x["rel"] == "next":
                 more_branches=True
