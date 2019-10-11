@@ -19,3 +19,6 @@ app.register_blueprint(bp, url_prefix="/")
 
 from views.publish import bp
 app.register_blueprint(bp, url_prefix="/publish")
+
+from views.build import bp
+app.register_blueprint(bp, url_prefix="/build")

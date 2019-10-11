@@ -13,4 +13,12 @@ def handle_internal_server_error(e):
     return jsonify(status), 500
 
 def handle_missing_arg(arg):
-    return f"Missing required arg: [{arg}]", 400
+    return handle_400_error(f"Missing required arg: [{arg}]")
+
+def handle_400_error(msg):
+    print(msg)
+    return msg, 400
+
+def handle_success(msg):
+    print(msg)
+    return msg, 200

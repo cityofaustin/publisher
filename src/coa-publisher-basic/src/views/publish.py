@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 import os, json, requests
 
-from helpers.res_handlers import handle_missing_arg
+from helpers.res_handlers import handle_missing_arg, handle_success
 
 bp = Blueprint('publish', __name__)
 
@@ -22,4 +22,4 @@ def publish():
     CMS_MEDIA = data.get('CMS_MEDIA')
     CMS_DOCS = data.get('CMS_DOCS')
 
-    return f"janis_branch is {janis_branch} and CMS_API is {CMS_API}", 200
+    return handle_success(f"janis_branch is {janis_branch} and CMS_API is {CMS_API}")
