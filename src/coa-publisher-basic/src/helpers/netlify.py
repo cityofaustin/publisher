@@ -1,4 +1,5 @@
 import os, json, requests
+from pprint import pprint
 
 netlify_url = "https://api.netlify.com/api/v1"
 netlify_headers = {
@@ -6,27 +7,44 @@ netlify_headers = {
     "Content-Type": "application/json",
 }
 
-# Get site_id and site_url if site already exists
+# Get site if site already exists
 def get_site(site_name):
-    site_id = None
-    site_url = None
+    site = None
+    more_sites = True
+    pagination = 1
+    while more_sites:
+        # Paginated query to list netlify sites
+        netlify_res = requests.get(
+            url=f"{netlify_url}/sites?page={pagination}&per_page=100",
+            headers=netlify_headers,
+        )
 
-    sites = requests.get(
-        url=netlify_url+"/sites",
-        headers=netlify_headers,
-    ).json()
+        # Check if there is another page of branches to query
+        netlify_res_link = requests.utils.parse_header_links(netlify_res.headers["link"])
+        more_sites = False
+        for x in netlify_res_link:
+            if x["rel"] == "next":
+                more_sites=True
+                pagination=pagination+1
+                break
 
-    for x in sites:
-        if x["name"] == site_name:
-            site_id = x["site_id"]
-            site_url = x["url"]
-            break
+        # Get site if site_name is among the queried sites
+        sites = netlify_res.json()
+        for x in sites:
+            if x["name"] == site_name:
+                site = x
+                break
 
-    return site_id, site_url
+        # If site was found, break out of while loop
+        # Else, the loop continues if there are more paginated results to be queried
+        if site: break
+
+    return site
 
 # Create a new netlify site
-def create_site(site_name, janis_branch, netlify_env):
-    site = requests.post(
+# Returns site
+def create_site(site_name, janis_branch):
+    return requests.post(
         url=netlify_url+"/sites",
         data=json.dumps({
             "name": site_name,
@@ -43,27 +61,17 @@ def create_site(site_name, janis_branch, netlify_env):
         headers=netlify_headers,
     ).json()
 
-    site_id = site["site_id"]
-    site_url = site["url"]
-
-    # Only PUT requests can set the "skip_pr" and "env" settings
+# Only PUT requests (not POST requests) can set the "skip_pr" and "env" settings
+def update_site(site_id, data):
     requests.put(
         url=f"{netlify_url}/sites/{site_id}",
-        data=json.dumps({
-            "build_settings": {
-                "skip_prs": True,
-                "env": netlify_env,
-            }
-        }),
+        data=json.dumps(data),
         headers=netlify_headers,
-    ).json()
-
-    return site_id, site_url
+    )
 
 # Get publish webhook for a netlify site
 def get_publish_hook(site_id):
     publish_hook_url = None
-
     build_hooks = requests.get(
         url=f"{netlify_url}/sites/{site_id}/build_hooks",
         headers=netlify_headers,
@@ -77,6 +85,7 @@ def get_publish_hook(site_id):
     return publish_hook_url
 
 # Create a publish webhook for a netlify site
+# Returns publish_hook_url
 def create_publish_hook(site_id):
     return requests.post(
         url=f"{netlify_url}/sites/{site_id}/build_hooks",
@@ -85,3 +94,31 @@ def create_publish_hook(site_id):
         }),
         headers=netlify_headers,
     ).json()["url"]
+
+# Triggers the publish_hook
+# Future option: adding a data param will be passed through as "INCOMING_HOOK_BODY" env var
+def run_publish_hook(publish_hook_url, CMS_API):
+    requests.post(
+        url=publish_hook_url,
+        params={
+            "trigger_title": f"triggered by publish from {CMS_API}"
+        },
+        headers=netlify_headers,
+    )
+
+# Could be used to check status of build created by create_build()
+def check_build_status(site_id, deploy_id):
+    deploy = requests.get(
+        url=f"{netlify_url}/sites/{site_id}/deploys/{deploy_id}",
+        headers=netlify_headers,
+    ).json()
+
+# Starts a build job in netlify
+# Returns deploy_id, can be pinged to get status of a deploy, which is not possible with webhook invocation
+def create_build(site_id):
+    deploy_id = requests.post(
+        url=f"{netlify_url}/sites/{site_id}/builds",
+        headers=netlify_headers,
+    ).json()["deploy_id"]
+
+    return deploy_id
