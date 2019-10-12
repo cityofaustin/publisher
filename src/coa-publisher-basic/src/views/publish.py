@@ -1,11 +1,11 @@
 from flask import Blueprint, request
 
+from app import app
+
 from helpers.res_handlers import handle_error, handle_missing_arg, handle_success
 from helpers.netlify import get_site, update_site, get_publish_hook, run_publish_hook
 
-bp = Blueprint('publish', __name__)
-
-@bp.route('', methods=('POST',))
+@app.route('/publish', methods=('POST',), strict_slashes=False)
 def publish():
     data = request.get_json(force=True)
     # Handle janis_branch arg

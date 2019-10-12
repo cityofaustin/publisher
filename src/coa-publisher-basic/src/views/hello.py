@@ -1,7 +1,5 @@
-from flask import Blueprint
+from app import app
 
-bp = Blueprint('common', __name__)
-
-@bp.route('/', methods=('GET',))
+@app.route('/', methods=('GET',))
 def index():
     return "Hello, world!!", 200

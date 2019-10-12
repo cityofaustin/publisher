@@ -1,12 +1,12 @@
-from flask import Blueprint, request
+from flask import request
+
+from app import app
 
 from helpers.res_handlers import handle_error, handle_missing_arg, handle_success
 from helpers.github import validate_janis_branch
 from helpers.netlify import get_site, create_site, update_site, get_publish_hook, create_publish_hook
 
-bp = Blueprint('build', __name__)
-
-@bp.route('', methods=('POST',))
+@app.route('/build', methods=('POST',), strict_slashes=False)
 def build():
     data = request.get_json(force=True)
     netlify_env = {} # env vars to plug into netlify site
