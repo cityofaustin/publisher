@@ -11,5 +11,5 @@ app.register_error_handler(500, handle_internal_server_error)
 
 # Import Routes
 import views.hello
-import views.publish
 import views.build
+import views.publish
