@@ -4,7 +4,7 @@ from app import app
 
 from helpers.res_handlers import handle_error, handle_missing_arg, handle_success
 from helpers.github import validate_janis_branch
-from helpers.netlify import get_site, create_site, update_site, get_publish_hook, create_publish_hook
+from helpers.netlify import get_site, create_site, update_site, create_hooks
 
 @app.route('/build', methods=('POST',), strict_slashes=False)
 def build():
@@ -43,19 +43,19 @@ def build():
         site = create_site(site_name, janis_branch)
         site_id = site["id"]
         site_url = site["url"]
-        # Only PUT requests (not POST requests) can set the "skip_pr" and "env" settings
-        update_site(site_id, {
-            "build_settings": {
-                "skip_prs": True,
-                "env": netlify_env,
-            }
-        })
 
-    # Create publish_hook for branch if it doesn't already exist
+    # Update values for site
+    update_site(site_id, {
+        "build_settings": {
+            "skip_prs": True,
+            "env": netlify_env,
+        }
+    })
+
+    # If there isn't a publish hook, assume that all hooks need to be built.
     publish_hook_url = get_publish_hook(site_id)
     if not publish_hook_url:
-        print(f"Building a new build_hook for {site_name}")
-        publish_hook_url = create_publish_hook(site_id)
+        create_hooks(site_id)
 
     # Return success message
     if existing_site:

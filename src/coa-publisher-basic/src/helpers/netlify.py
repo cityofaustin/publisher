@@ -69,6 +69,54 @@ def update_site(site_id, data):
         headers=netlify_headers,
     )
 
+# Create incoming publish hook and outgoing github notification hooks
+def create_hooks(site_id):
+    # Create publish hook
+    requests.post(
+        url=f"{netlify_url}/sites/{site_id}/build_hooks",
+        data=json.dumps({
+            "title": "PUBLISH",
+        }),
+        headers=netlify_headers,
+    )
+
+    # Create outgoing github hooks
+    github_hooks = [
+        {
+            "event": "deploy_building",
+            "type": "github_app_commit_status"
+        },
+        {
+            "event": "deploy_building",
+            "type": "github_app_checks"
+        },
+        {
+            "event": "deploy_created",
+            "type": "github_app_commit_status"
+        },
+        {
+            "event": "deploy_created",
+            "type": "github_app_checks"
+        },
+        {
+            "event": "deploy_failed",
+            "type": "github_app_commit_status"
+        },
+        {
+            "event": "deploy_failed",
+            "type": "github_app_checks"
+        }
+    ]
+    for hook in github_hooks:
+        requests.post(
+            url=f"{netlify_url}/hooks",
+            data=json.dumps({
+                "site_id": site_id,
+                **hook
+            }),
+            headers=netlify_headers,
+        )
+
 # Get publish webhook for a netlify site
 def get_publish_hook(site_id):
     publish_hook_url = None
@@ -83,17 +131,6 @@ def get_publish_hook(site_id):
             break
 
     return publish_hook_url
-
-# Create a publish webhook for a netlify site
-# Returns publish_hook_url
-def create_publish_hook(site_id):
-    return requests.post(
-        url=f"{netlify_url}/sites/{site_id}/build_hooks",
-        data=json.dumps({
-            "title": "PUBLISH",
-        }),
-        headers=netlify_headers,
-    ).json()["url"]
 
 # Triggers the publish_hook
 # Future option: adding a data param will be passed through as "INCOMING_HOOK_BODY" env var
