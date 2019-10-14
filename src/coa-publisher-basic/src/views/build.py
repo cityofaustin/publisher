@@ -4,7 +4,7 @@ from app import app
 
 from helpers.res_handlers import handle_error, handle_missing_arg, handle_success
 from helpers.github import validate_janis_branch
-from helpers.netlify import get_site, create_site, update_site, create_hooks
+from helpers.netlify import get_site, create_site, update_site, get_publish_hook, create_hooks
 
 @app.route('/build', methods=('POST',), strict_slashes=False)
 def build():
