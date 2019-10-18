@@ -1,5 +1,5 @@
 import os, json, requests
-from pprint import pprint
+import urllib.parse
 
 netlify_url = "https://api.netlify.com/api/v1"
 netlify_headers = {
@@ -138,7 +138,7 @@ def run_publish_hook(publish_hook_url, CMS_API):
     requests.post(
         url=publish_hook_url,
         params={
-            "trigger_title": f"triggered by publish from {CMS_API}"
+            "trigger_title": f"triggered by publish from {urllib.parse.urlparse(CMS_API).netloc || CMS_API}"
         },
         headers=netlify_headers,
     )
