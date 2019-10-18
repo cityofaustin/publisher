@@ -138,7 +138,7 @@ def run_publish_hook(publish_hook_url, CMS_API):
     requests.post(
         url=publish_hook_url,
         params={
-            "trigger_title": f"triggered by publish from {urllib.parse.urlparse(CMS_API).netloc || CMS_API}"
+            "trigger_title": f"triggered by publish from {urllib.parse.urlparse(CMS_API).netloc or CMS_API}"
         },
         headers=netlify_headers,
     )
