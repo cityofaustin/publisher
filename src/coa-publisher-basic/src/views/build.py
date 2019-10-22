@@ -25,6 +25,8 @@ def build():
     if CMS_MEDIA: netlify_env["CMS_MEDIA"] = CMS_MEDIA
     CMS_DOCS = data.get('CMS_DOCS')
     if CMS_DOCS: netlify_env["CMS_DOCS"] = CMS_DOCS
+    FEEDBACK_API = data.get('FEEDBACK_API')
+    if FEEDBACK_API: netlify_env["FEEDBACK_API"] = FEEDBACK_API
 
     # Create Site if it doesn't already exist
     site = get_site(site_name)
