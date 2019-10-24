@@ -20,7 +20,7 @@ def publish():
     # Handle optional Args
     CMS_MEDIA = data.get('CMS_MEDIA')
     CMS_DOCS = data.get('CMS_DOCS')
-    FEEDBACK_API = data.get('FEEDBACK_API')
+    DEPLOYMENT_MODE = data.get('DEPLOYMENT_MODE')
 
     # Get netlify site data
     site = get_site(site_name)
@@ -34,7 +34,7 @@ def publish():
     netlify_env["CMS_API"] = CMS_API
     if CMS_MEDIA: netlify_env["CMS_MEDIA"] = CMS_MEDIA
     if CMS_DOCS: netlify_env["CMS_DOCS"] = CMS_DOCS
-    if FEEDBACK_API: netlify_env["FEEDBACK_API"] = FEEDBACK_API
+    if DEPLOYMENT_MODE: netlify_env["DEPLOYMENT_MODE"] = DEPLOYMENT_MODE
     update_site(site_id, {
         "build_settings": {
             "env": netlify_env,
