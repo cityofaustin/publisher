@@ -55,7 +55,7 @@ The environment vars we use are committed in the AWS Systems Manager. https://co
 
 - NETLIFY_AUTH_TOKEN
   - `/coa-publisher/mvp/NETLIFY_AUTH_TOKEN` in AWS Systems Manager
-  - Personal Access Token for our netlify API. They can be found/created in User Settings > Personal Access Tokens. The "coa-publisher-mvp" token is being used by the current deployed coa-publisher.
+  - Personal Access Token for our netlify API. They can be found/created in the Netlify dashboard under User Settings > Applications > Personal Access Tokens.
 - NETLIFY_GITHUB_INSTALLATION_ID
   - `/coa-publisher/mvp/NETLIFY_GITHUB_INSTALLATION_ID` in AWS Systems Manager
   - Originally copy and pasted from another Janis site that had a manually created github integration. It can be found under build_settings.installation_id in api response from https://api.netlify.com/api/v1/sites/{site_id}
