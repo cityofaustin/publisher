@@ -7,7 +7,7 @@ function clean_up {
 }
 trap clean_up EXIT
 
-# set src/coa-publisher-basic as your current directory
+# sets src/coa-publisher-mvp as your current directory
 # necessary because "pipenv run zappa" wants zappa_settings to be at the "root" of your project directory.
 cd $CD/..
 

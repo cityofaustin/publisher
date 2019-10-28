@@ -8,7 +8,7 @@ function clean_up {
 }
 trap clean_up EXIT
 
-# set src/coa-publisher-basic as your current directory
+# sets src/coa-publisher-mvp as your current directory
 # necessary because "pipenv run zappa" wants zappa_settings to be at the "root" of your project directory.
 cd $CD/..
 
@@ -24,7 +24,7 @@ cat ./zappa_settings.json
 # set +e temporarily allows us to throw errors.
 # If `get-function` returns a 255 error, then we know that our lambda does not exist and needs to be deployed.
 set +e
-ZAPPA_FUNCTION=$(echo "coa-publisher-basic-pr" | sed 's/_/-/g')
+ZAPPA_FUNCTION=$(echo "coa-publisher-mvp-pr" | sed 's/_/-/g')
 $(aws lambda get-function --function-name $ZAPPA_FUNCTION > /dev/null)
 result=$?
 set -e

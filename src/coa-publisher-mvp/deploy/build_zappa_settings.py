@@ -6,7 +6,7 @@ zappa_settings = {
     "pr": {
         "app_function": "main.app",
         "profile_name": None,
-        "project_name": "coa-publisher-basic",
+        "project_name": "coa-publisher-mvp",
         "runtime": "python3.7",
         "log_level": "ERROR",
         "environment_variables": {
@@ -17,7 +17,7 @@ zappa_settings = {
 config = zappa_settings["pr"]
 
 # Add Environment variables to your zappa function
-# These are sourced from your .env file
+# These are sourced from your .env file when you run with "pipenv"
 vars_to_add = [
     "NETLIFY_AUTH_TOKEN",
     "NETLIFY_GITHUB_INSTALLATION_ID",
