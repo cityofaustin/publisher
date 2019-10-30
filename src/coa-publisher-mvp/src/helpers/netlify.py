@@ -21,8 +21,8 @@ def get_site(site_name):
 
         # Check if there is another page of branches to query
         more_sites = False
-        if netlify_res.headers["link"]:
-            netlify_res_link = requests.utils.parse_header_links(netlify_res.headers["link"])
+        if netlify_res.headers.get("link"):
+            netlify_res_link = requests.utils.parse_header_links(netlify_res.headers.get("link"))
             for x in netlify_res_link:
                 if x["rel"] == "next":
                     more_sites=True

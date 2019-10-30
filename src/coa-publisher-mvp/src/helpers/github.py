@@ -13,8 +13,8 @@ def validate_janis_branch(janis_branch):
 
         # Check if there is another page of branches to query
         more_branches = False
-        if github_res.headers['link']:
-            github_res_link = requests.utils.parse_header_links(github_res.headers["link"])
+        if github_res.headers.get('link'):
+            github_res_link = requests.utils.parse_header_links(github_res.headers.get('link'))
             for x in github_res_link:
                 if x["rel"] == "next":
                     more_branches=True
