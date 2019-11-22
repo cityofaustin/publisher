@@ -42,7 +42,7 @@ def build():
         print(f"Building a new site for {site_name}")
         if not validate_janis_branch(janis_branch):
             return handle_error(f"[{janis_branch}] is not a valid janis_branch", 400)
-        site = create_site(site_name, janis_branch)
+        site = create_site(site_name, janis_branch, netlify_env)
         site_id = site["id"]
         site_url = site["url"]
 
@@ -50,7 +50,6 @@ def build():
     update_site(site_id, {
         "build_settings": {
             "skip_prs": True,
-            "env": netlify_env,
         }
     })
 

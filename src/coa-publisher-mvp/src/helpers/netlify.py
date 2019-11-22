@@ -44,7 +44,7 @@ def get_site(site_name):
 
 # Create a new netlify site
 # Returns site
-def create_site(site_name, janis_branch):
+def create_site(site_name, janis_branch, netlify_env):
     return requests.post(
         url=netlify_url+"/sites",
         data=json.dumps({
@@ -54,6 +54,7 @@ def create_site(site_name, janis_branch):
                 "repo": "cityofaustin/janis",
                 "private": False,
                 "branch": janis_branch,
+                "env": netlify_env,
                 "cmd": "yarn publish-netlify-pr",
                 "dir": "dist",
                 "installation_id": int(os.getenv('NETLIFY_GITHUB_INSTALLATION_ID')),
