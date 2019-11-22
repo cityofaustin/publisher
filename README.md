@@ -62,7 +62,7 @@ The environment vars we use are committed in the AWS Systems Manager. https://co
 - DEPLOY_ENV and JANIS_BRANCH are unused by coa-publisher-mvp, but they will be used in the next version of the Publisher.
 
 ### 3. Run it
-`sh /src/coa-publisher-mvp/scripts/run-local.sh`
+`sh ./src/coa-publisher-mvp/scripts/run-local.sh`
 
 ## Deployment
 
@@ -78,4 +78,4 @@ Follow the above steps
 `cat ~/.aws/credentials`
 
 ### 3. Deploy it
-`sh /src/coa-publisher-mvp/deploy/deploy.sh`
+`sh ./src/coa-publisher-mvp/deploy/deploy.sh`
