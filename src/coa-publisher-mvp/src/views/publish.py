@@ -9,7 +9,7 @@ from helpers.netlify import get_site, update_site, get_publish_hook, run_publish
 def publish():
     data = request.get_json(force=True)
     # Handle janis_branch arg
-    janis_branch = data.get('janis_branch')
+    janis_branch = data.get('janis_branch').lower()
     if not janis_branch:
         return handle_missing_arg('janis_branch')
     site_name = f'janis-{janis_branch}' # name of the netlify site

@@ -11,7 +11,7 @@ def build():
     data = request.get_json(force=True)
     netlify_env = {} # env vars to plug into netlify site
     # Handle janis_branch arg
-    janis_branch = data.get('janis_branch')
+    janis_branch = data.get('janis_branch').lower()
     if not janis_branch:
         return handle_missing_arg('janis_branch')
     site_name = f'janis-{janis_branch}'
