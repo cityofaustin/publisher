@@ -11,7 +11,7 @@ def build():
     data = request.get_json(force=True)
     netlify_env = {} # env vars to plug into netlify site
     # Handle janis_branch arg
-    janis_branch = data.get('janis_branch')
+    janis_branch = data.get('janis_branch').lower()
     if not janis_branch:
         return handle_missing_arg('janis_branch')
     site_name = f'janis-{janis_branch}'
@@ -43,6 +43,9 @@ def build():
         if not validate_janis_branch(janis_branch):
             return handle_error(f"[{janis_branch}] is not a valid janis_branch", 400)
         site = create_site(site_name, janis_branch, netlify_env)
+        # If create_site does not successfully create a site, it returns an error message
+        if not site["id"]:
+            return handle_error(f"{site}", 404)
         site_id = site["id"]
         site_url = site["url"]
 
