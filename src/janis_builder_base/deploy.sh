@@ -9,7 +9,6 @@ fi
 
 # Deploys a new staging janis-builder-base docker image to the City of Austin dockerhub
 TAG="cityofaustin/janis-builder-base:$DEPLOY_ENV-latest"
-pipenv lock --requirements > $CD/requirements.txt
 docker build -f $CD/janis-builder-base.Dockerfile -t $TAG $CD/../..
 docker push $TAG
 
@@ -20,12 +19,12 @@ docker push $TAG
 # Remove codebuild docker image cache
 echo "Clearing codebuild janis-builder-base image cache"
 aws codebuild update-project \
-  --name coa-publisher-janis-builder-creator-$DEPLOY_ENV \
+  --name coa-publisher-janis-builder-factory-$DEPLOY_ENV \
   --cache type=NO_CACHE \
 > /dev/null
 
 aws codebuild update-project \
-  --name coa-publisher-janis-builder-creator-$DEPLOY_ENV \
+  --name coa-publisher-janis-builder-factory-$DEPLOY_ENV \
   --cache type=LOCAL,modes=[LOCAL_DOCKER_LAYER_CACHE] \
 > /dev/null
 

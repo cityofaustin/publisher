@@ -4,5 +4,8 @@
   "main": "index.js",
   "repository": "git@github.com:cityofaustin/publisher.git",
   "author": "Niicck <niicck@users.noreply.github.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.601.0"
+  }
 }

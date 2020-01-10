@@ -26,7 +26,7 @@ function upload_cache {
 }
 
 # Use cached node_modules if a cache exists and the yarn.lock is unchanged.
-if [[ $(python $CD/cache_exists.py) == "True" ]]; then
+if [[ $(node $CD/cache_exists.js) == "True" ]]; then
   echo "#### cache exists for branch: $JANIS_BRANCH"
   SOURCE_BRANCH=$JANIS_BRANCH
   CURRENT_BRANCH_CACHE=True
