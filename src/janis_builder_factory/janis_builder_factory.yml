@@ -11,7 +11,7 @@ Resources:
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Join [ '-', [ 'coa-publisher-janis-builder-creator', !Ref Env ] ]
+      Name: !Join [ '-', [ 'coa-publisher-janis-builder-factory', !Ref Env ] ]
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
         Type: NO_ARTIFACTS
@@ -22,7 +22,7 @@ Resources:
         PrivilegedMode: true # Required for building docker images and LOCAL caching
       Source:
         Type: S3
-        Location: !Join [ '', ['coa-publisher/source/', !Ref Env, '/'] ]
+        Location: !Join [ '', ['coa-publisher/janis_builder_factory_source/', !Ref Env, '/'] ]
         BuildSpec: './buildspec.yml'
       TimeoutInMinutes: 10
       Cache:
@@ -33,7 +33,7 @@ Resources:
   CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: 'coa-publisher-janis-builder-creator'
+      RoleName: 'coa-publisher-janis-builder-factory'
       AssumeRolePolicyDocument:
         Statement:
         - Effect: Allow
