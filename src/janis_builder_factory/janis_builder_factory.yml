@@ -5,8 +5,23 @@ Parameters:
     AllowedValues:
       - staging
       - prod
+  JanisBuilderBaseEcrName:
+    Type: String
+    Default: "cityofaustin/janis_builder_base"
+  JanisBuilderEcrName:
+    Type: String
+    Default: "cityofaustin/janis_builder"
 
 Resources:
+  JanisBuilderBaseEcr:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref JanisBuilderBaseEcrName
+  JanisBuilderEcr:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref JanisBuilderEcrName
+
   # Create a CodeBuild Project to build new branch-publisher images
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
@@ -20,6 +35,11 @@ Resources:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/standard:2.0
         PrivilegedMode: true # Required for building docker images and LOCAL caching
+        EnvironmentVariables:
+          # You need the ECR_URI to know where to push your docker images after you've built them
+          - Name: JANIS_BUILDER_ECR_URI
+            Type: PLAINTEXT
+            Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${JanisBuilderEcrName}"
       Source:
         Type: S3
         Location: !Join [ '', ['coa-publisher/janis_builder_factory_source/', !Ref Env, '/'] ]
@@ -33,7 +53,7 @@ Resources:
   CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: 'coa-publisher-janis-builder-factory'
+      RoleName: !Join [ '-', [ 'coa-publisher-janis-builder-factory', !Ref Env ] ]
       AssumeRolePolicyDocument:
         Statement:
         - Effect: Allow
@@ -65,3 +85,23 @@ Resources:
                 - 's3:DeleteObject'
                 - 's3:PutObject'
               Resource: 'arn:aws:s3:::coa-publisher/*'
+            - Effect: Allow
+              Action:
+                # get permission to pull janis_builder_base image from ECR
+                - "ecr:GetDownloadUrlForLayer"
+                - "ecr:BatchGetImage"
+                - "ecr:BatchCheckLayerAvailability"
+                - "ecr:GetAuthorizationToken"
+              Resource: '*'
+
+Outputs:
+  JanisBuilderBaseEcrUri:
+    Description: "The URI for cityofaustin/janis_builder_base ECR repo"
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${JanisBuilderBaseEcrName}"
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'JanisBuilderBaseEcrUri' ] ]
+  JanisBuilderEcrUri:
+    Description: "The URI for cityofaustin/janis_builder ECR repo"
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${JanisBuilderEcrName}"
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'JanisBuilderEcrUri' ] ]

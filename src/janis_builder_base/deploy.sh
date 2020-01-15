@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-CD=`dirname $BASH_SOURCE`
+D=`dirname $BASH_SOURCE`
 export DEPLOY_ENV=${DEPLOY_ENV:-"staging"}
 
 if [ "$DEPLOY_ENV" != "staging" ] && [ "$DEPLOY_ENV" != "prod" ]; then
@@ -7,12 +7,19 @@ if [ "$DEPLOY_ENV" != "staging" ] && [ "$DEPLOY_ENV" != "prod" ]; then
   exit 1
 fi
 
+# Get Auth token in order to push docker image to ECR
+$(aws ecr get-login --no-include-email)
+
+# Get ECR Repo URI from Stack Outputs
+pipenv run python $D/get_ecr_uri.py
+source $D/ecr_uri.tmp
+
 # Deploys a new staging janis-builder-base docker image to the City of Austin dockerhub
-TAG="cityofaustin/janis-builder-base:$DEPLOY_ENV-latest"
-docker build -f $CD/janis-builder-base.Dockerfile -t $TAG $CD/../..
+TAG="$JANIS_BUILDER_BASE_ECR_URI:$DEPLOY_ENV-latest"
+docker build -f $D/janis-builder-base.Dockerfile -t $TAG $D
 docker push $TAG
 
-# cityofaustin/janis-builder-base is used exclusively by codebuild as the base image to build new janis-builder images.
+# janis-builder-base is used exclusively by codebuild as the base image to build new janis-builder images.
 # When this image gets updated, codebuild needs to re-download it from dockerhub.
 # So we clear out our CodeBuild docker image cache (to clear out the old cityofaustin/janis-builder-base image layer)
 

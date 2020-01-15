@@ -22,5 +22,5 @@ aws s3 sync $LOCAL_SOURCE_DIR $S3_DESTINATION --delete
 aws cloudformation deploy \
   --stack-name coa-publisher-janis-builder-factory-$DEPLOY_ENV \
   --template-file $CD/janis_builder_factory.yml \
-  --parameter-overrides Env=$DEPLOY_ENV \
+  --parameter-overrides Env=$DEPLOY_ENV JanisBuilderBaseEcrName="cityofaustin/janis-builder-base" JanisBuilderEcrName="cityofaustin/janis-builder"\
   --capabilities CAPABILITY_NAMED_IAM
