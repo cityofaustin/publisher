@@ -3,18 +3,19 @@ import os, json, boto3
 ecs_client = boto3.client('ecs')
 s3_client = boto3.client('s3')
 cf_client = boto3.client('cloudformation')
+janis_branch = os.getenv("JANIS_BRANCH")
 
 # Retrieve latest task definition ARN (with revision number)
-latest_task_definition = s3_client.get_object(
-    Bucket='coa-publisher',
-    Key=f'cache/{os.getenv("JANIS_BRANCH")}/latest_task_definition.txt'
-)['Body'].read().decode('utf-8')
+latest_task_definition = ecs_client.list_task_definitions(
+    familyPrefix=f'janis-builder-{janis_branch}',
+    sort="DESC",
+    maxResults=1,
+)['taskDefinitionArns'][0]
 
 # Retrieve the subnets to use from your CloudFormation Stack
 cf_outputs = cf_client.describe_stacks(
     StackName=f'coa-publisher-{os.getenv("DEPLOY_ENV")}'
 )['Stacks'][0]['Outputs']
-
 for x in cf_outputs:
     if x['OutputKey'] == "PublicSubnetOne":
         PublicSubnetOne = x['OutputValue']
@@ -22,6 +23,7 @@ for x in cf_outputs:
         PublicSubnetTwo = x['OutputValue']
 
 # Start the Task
+print("About to run the task")
 ecs_client.run_task(
     cluster='coa-publisher',
     taskDefinition=latest_task_definition,

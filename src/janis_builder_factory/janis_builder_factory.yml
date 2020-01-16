@@ -92,10 +92,10 @@ Resources:
             - Effect: Allow
               Action:
                 # get permission to pull janis_builder_base image from ECR
+                - "ecr:GetAuthorizationToken"
                 - "ecr:GetDownloadUrlForLayer"
                 - "ecr:BatchGetImage"
                 - "ecr:BatchCheckLayerAvailability"
-                - "ecr:GetAuthorizationToken"
                 - "ecr:InitiateLayerUpload"
                 - "ecr:UploadLayerPart"
                 - "ecr:CompleteLayerUpload"

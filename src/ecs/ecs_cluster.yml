@@ -131,6 +131,22 @@ Resources:
                 - 'logs:CreateLogStream'
                 - 'logs:PutLogEvents'
               Resource: '*'
+            - Effect: Allow
+              Action:
+                # allow GET/PUT for objects in coa-publisher-codebuild s3 bucket
+                - 's3:GetBucketLocation'
+                - 's3:GetObject'
+                - 's3:DeleteObject'
+                - 's3:PutObject'
+              Resource: 'arn:aws:s3:::coa-publisher/*'
+            - Effect: Allow
+              Action:
+                # get permission to pull janis_builder_base image from ECR
+                - "ecr:GetAuthorizationToken"
+                - "ecr:GetDownloadUrlForLayer"
+                - "ecr:BatchGetImage"
+                - "ecr:BatchCheckLayerAvailability"
+              Resource: '*'
 
   # Log group for janis-builder tasks
   LogGroup:
