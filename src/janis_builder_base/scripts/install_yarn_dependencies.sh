@@ -22,8 +22,8 @@ function upload_cache {
   # Add compressed node_modules to cache
   tar -czf $cached_modules -C $janis_dir node_modules
   node $D/s3Upload.js $cached_modules cache/$JANIS_BRANCH/node_modules.tar.gz
-  # Add yarn.lock to cache
-  node $D/s3Upload.js $cached_yarn_lock cache/$JANIS_BRANCH/yarn.lock
+  # Add janis yarn.lock to cache
+  node $D/s3Upload.js $janis_dir/yarn.lock cache/$JANIS_BRANCH/yarn.lock
 }
 
 # Check if a cache exists for your particular $JANIS_BRANCH

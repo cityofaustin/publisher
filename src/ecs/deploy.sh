@@ -8,4 +8,5 @@ CD=`dirname $BASH_SOURCE`
 aws cloudformation deploy \
   --template-file $CD/ecs_cluster.yml \
   --stack-name coa-publisher-staging \
-  --capabilities CAPABILITY_NAMED_IAM
+  --capabilities CAPABILITY_NAMED_IAM \
+  --tags user:app=publisher user:stage=staging user:project=alpha.austin.gov
