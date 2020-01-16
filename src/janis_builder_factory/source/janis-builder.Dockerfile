@@ -1,5 +1,6 @@
 ARG VERSION=staging-latest
-FROM cityofaustin/janis-builder-base:$VERSION
+ARG JANIS_BUILDER_BASE_ECR_URI
+FROM $JANIS_BUILDER_BASE_ECR_URI:$VERSION
 
 # Pass aws cli credentials during build
 ARG AWS_DEFAULT_REGION
@@ -18,4 +19,4 @@ RUN git clone -b "$JANIS_BRANCH" --single-branch https://github.com/cityofaustin
 RUN ./scripts/install_yarn_dependencies.sh
 
 # Run your publish command
-ENTRYPOINT ["./publish.sh"]
+ENTRYPOINT ["./scripts/publish.sh"]

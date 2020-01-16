@@ -7,7 +7,7 @@ env:
     DEST: ""
     CMS_MEDIA: ""
     # JANIS_BUILDER_ECR_URI is set within CodeBuildProject CloudFormation instructions
-
+    # JANIS_BUILDER_BASE_ECR_URI is set within CodeBuildProject CloudFormation instructions
 phases:
   install:
     runtime-versions:
@@ -25,13 +25,14 @@ phases:
       - docker build
         -f ./janis-builder.Dockerfile
         -t $TAG
+        --build-arg JANIS_BUILDER_BASE_ECR_URI="$JANIS_BUILDER_BASE_ECR_URI"
         --build-arg VERSION=staging-latest
-        --build-arg AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
-        --build-arg AWS_CONTAINER_CREDENTIALS_RELATIVE_URI=$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
-        --build-arg JANIS_BRANCH=$JANIS_BRANCH
-        --build-arg JOPLIN_BRANCH=$JOPLIN_BRANCH
-        --build-arg DEST=$DEST
-        --build-arg CMS_MEDIA=$CMS_MEDIA
+        --build-arg AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION"
+        --build-arg AWS_CONTAINER_CREDENTIALS_RELATIVE_URI="$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
+        --build-arg JANIS_BRANCH="$JANIS_BRANCH"
+        --build-arg JOPLIN_BRANCH="$JOPLIN_BRANCH"
+        --build-arg DEST="$DEST"
+        --build-arg CMS_MEDIA="$CMS_MEDIA"
         .
   post_build:
     commands:

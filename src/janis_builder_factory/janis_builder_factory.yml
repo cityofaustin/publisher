@@ -32,11 +32,15 @@ Resources:
         Type: NO_ARTIFACTS
       Environment:
         Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
+        ComputeType: BUILD_GENERAL1_MEDIUM
         Image: aws/codebuild/standard:2.0
         PrivilegedMode: true # Required for building docker images and LOCAL caching
         EnvironmentVariables:
-          # You need the ECR_URI to know where to push your docker images after you've built them
+          # JANIS_BUILDER_BASE_ECR_URI is required for your janis-builder.Dockerfile to know which repo to pull from
+          - Name: JANIS_BUILDER_BASE_ECR_URI
+            Type: PLAINTEXT
+            Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${JanisBuilderBaseEcrName}"
+          # JANIS_BUILDER_ECR_URI is required for the CodeBuild buildspec.yml to know where to push your docker images after you've built them
           - Name: JANIS_BUILDER_ECR_URI
             Type: PLAINTEXT
             Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${JanisBuilderEcrName}"
@@ -44,7 +48,7 @@ Resources:
         Type: S3
         Location: !Join [ '', ['coa-publisher/janis_builder_factory_source/', !Ref Env, '/'] ]
         BuildSpec: './buildspec.yml'
-      TimeoutInMinutes: 10
+      TimeoutInMinutes: 20
       Cache:
         Type: LOCAL # Caches Docker layers on AWS Host build machine
         Modes:
@@ -92,6 +96,10 @@ Resources:
                 - "ecr:BatchGetImage"
                 - "ecr:BatchCheckLayerAvailability"
                 - "ecr:GetAuthorizationToken"
+                - "ecr:InitiateLayerUpload"
+                - "ecr:UploadLayerPart"
+                - "ecr:CompleteLayerUpload"
+                - "ecr:PutImage"
               Resource: '*'
 
 Outputs:
