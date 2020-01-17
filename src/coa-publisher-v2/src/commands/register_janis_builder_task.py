@@ -9,26 +9,21 @@ def register_janis_builder_task(janis_branch):
     s3_client = boto3.client('s3')
     cf_client = boto3.client('cloudformation')
     sanitized_janis_branch = github_to_aws(janis_branch)
+    stack_name = f'coa-publisher-{os.getenv("DEPLOY_ENV")}'
 
     # Get the executionRoleArn from your CloudFormation stack outputs
     cf_outputs = cf_client.describe_stacks(
-        StackName=f'coa-publisher-{os.getenv("DEPLOY_ENV")}'
+        StackName=stack_name
     )['Stacks'][0]['Outputs']
     for x in cf_outputs:
-        if x['OutputKey'] == "ECSTaskExecutionRole":
+        if x['OutputKey'] == "FargateTaskExecutionRole":
             executionRoleArn = x["OutputValue"]
-    if not executionRoleArn:
-        raise Exception(f"No ECSTaskExecutionRole found in coa-publisher-{os.getenv('DEPLOY_ENV')} stack")
-
-    # Get the janis_builder_ecr_uri from your CloudFormation stack outputs
-    cf_outputs = cf_client.describe_stacks(
-        StackName=f'coa-publisher-janis-builder-factory-{os.getenv("DEPLOY_ENV")}'
-    )['Stacks'][0]['Outputs']
-    for x in cf_outputs:
         if x['OutputKey'] == "JanisBuilderEcrUri":
             janis_builder_ecr_uri = x["OutputValue"]
+    if not executionRoleArn:
+        raise Exception(f"No FargateTaskExecutionRole found in stack {stack_name}")
     if not janis_builder_ecr_uri:
-        raise Exception(f"No JanisBuilderEcrUri found in coa-publisher-janis-builder-factory-{os.getenv('DEPLOY_ENV')} stack")
+        raise Exception(f"No JanisBuilderEcrUri found in stack {stack_name}")
     janis_builder_image = f"{janis_builder_ecr_uri}:{sanitized_janis_branch}-latest"
 
     # Register task definition for ECS to launch janis-builder:$JANIS_BRANCH containers

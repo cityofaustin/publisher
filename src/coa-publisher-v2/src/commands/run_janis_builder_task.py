@@ -5,7 +5,6 @@ def run_janis_builder_task(janis_branch):
     ecs_client = boto3.client('ecs')
     s3_client = boto3.client('s3')
     cf_client = boto3.client('cloudformation')
-    janis_branch = os.getenv("JANIS_BRANCH")
     sanitized_janis_branch = github_to_aws(janis_branch)
 
     # Retrieve latest task definition ARN (with revision number)
@@ -24,6 +23,8 @@ def run_janis_builder_task(janis_branch):
             PublicSubnetOne = x['OutputValue']
         elif x['OutputKey'] == "PublicSubnetTwo":
             PublicSubnetTwo = x['OutputValue']
+        elif x['OutputKey'] == "ClusterSecurityGroup":
+            ClusterSecurityGroup = x['OutputValue']
 
     # Start the Task
     print("About to run the task")
@@ -36,6 +37,9 @@ def run_janis_builder_task(janis_branch):
                 "subnets": [
                     PublicSubnetOne,
                     PublicSubnetTwo,
+                ],
+                "securityGroups": [
+                    ClusterSecurityGroup,
                 ],
                 'assignPublicIp': 'ENABLED'
             }
