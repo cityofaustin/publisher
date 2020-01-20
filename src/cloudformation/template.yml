@@ -40,6 +40,7 @@ Resources:
          - 0
          - Fn::GetAZs: !Ref AWS::Region
       CidrBlock: '10.0.0.0/24'
+      MapPublicIpOnLaunch: true
       VpcId: !Ref VPC
   PublicSubnetTwo:
     Type: AWS::EC2::Subnet
@@ -49,6 +50,7 @@ Resources:
          - 1
          - Fn::GetAZs: !Ref AWS::Region
       CidrBlock: '10.0.1.0/24'
+      MapPublicIpOnLaunch: true
       VpcId: !Ref VPC
   PrivateSubnetOne:
     Type: AWS::EC2::Subnet
@@ -258,7 +260,7 @@ Resources:
       VpcId:
         Ref: VPC
 
-  ContainerRDSIngress:
+  ClusterRDSIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       IpProtocol: tcp
@@ -454,3 +456,8 @@ Outputs:
     Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${JanisBuilderEcrName}"
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'JanisBuilderEcrUri' ] ]
+  PgEndpoint:
+    Description: The endpoint for Publisher's Postgres Database
+    Value: !GetAtt 'RDS.Endpoint.Address'
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PgEndpoint' ] ]

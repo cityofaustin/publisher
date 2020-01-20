@@ -1,0 +1,60 @@
+Parameters:
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+  ClusterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+  BastionKeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 key used to connect to the bastion host
+
+Resources:
+  ########
+  # RDS Bastion Server
+  ########
+  BastionServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-00a208c7cdba991ea # Ubuntu v18.04, https://github.com/aws-quickstart/quickstart-linux-bastion/blob/master/templates/linux-bastion.template
+      InstanceType: t2.micro
+      DisableApiTermination: false
+      SubnetId: !Ref SubnetId
+      AvailabilityZone:
+        Fn::Select:
+        - 0
+        - Fn::GetAZs: !Ref AWS::Region
+      KeyName: !Ref BastionKeyName
+      SecurityGroupIds:
+        - Ref: BastionSecurityGroup # allows outside users to access port 5432
+        - Ref: ClusterSecurityGroup # allows same permissions as ClusterSecurityGroup (including access to Private RDS)
+      UserData:
+         Fn::Base64:
+           !Sub |
+           #!/bin/bash
+           # Update all packages
+           apt-get update
+           # Install psql client
+           apt-get install -y postgresql-client
+
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for Bastion Server
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 5432
+          IpProtocol: TCP
+          ToPort: 5432
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          IpProtocol: TCP
+          ToPort: 22
+      VpcId: !Ref VPCId
+
+Outputs:
+  BastionDns:
+    Description: The DNS of your bastion server
+    Value: !GetAtt BastionServer.PublicDnsName
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'BastionDns' ] ]

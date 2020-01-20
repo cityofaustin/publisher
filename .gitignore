@@ -8,8 +8,9 @@ zappa_settings.json
 node_modules/
 *.tmp
 
-# Environment Variables
+# Secrets
 .env
+*.pem
 
 # dev
 local
