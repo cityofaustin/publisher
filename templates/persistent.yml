@@ -1,0 +1,30 @@
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: coa-publisher
+      PublicAccessBlockConfiguration:
+          BlockPublicAcls: True
+          BlockPublicPolicy: True
+          IgnorePublicAcls: True
+          RestrictPublicBuckets: True
+  JanisBuilderBaseEcr:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: "cityofaustin/janis_builder_base"
+  JanisBuilderEcr:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: "cityofaustin/janis_builder"
+Outputs:
+  JanisBuilderBaseEcrUri:
+    Description: "The URI for cityofaustin/janis_builder_base ECR repo"
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cityofaustin/janis_builder_base"
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'JanisBuilderBaseEcrUri' ] ]
+  JanisBuilderEcrUri:
+    Description: "The URI for cityofaustin/janis_builder ECR repo"
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cityofaustin/janis_builder"
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'JanisBuilderEcrUri' ] ]

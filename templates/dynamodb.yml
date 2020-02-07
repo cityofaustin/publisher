@@ -1,0 +1,6 @@
+Resources:
+  DynamoDb:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinition:
+      KeySchema:

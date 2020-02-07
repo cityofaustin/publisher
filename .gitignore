@@ -7,6 +7,7 @@ src/janis_builder_base/requirements.txt
 zappa_settings.json
 node_modules/
 *.tmp
+.serverless/
 
 # Secrets
 .env

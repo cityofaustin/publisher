@@ -17,3 +17,5 @@ COPY "./scripts" ./scripts
 # Install dependencies for scripts
 COPY "./package.json" ./scripts
 RUN yarn install --cwd ./scripts
+
+# TODO: Run a build
