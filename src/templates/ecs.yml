@@ -16,7 +16,7 @@ Resources:
   ECSRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: coa-publisher-ecs-${env:SLS_STAGE}
+      RoleName: coa-publisher-ecs-${env:DEPLOY_ENV}
       AssumeRolePolicyDocument:
         Statement:
         - Effect: Allow
@@ -44,7 +44,7 @@ Resources:
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: coa-publisher-task-execution-${env:SLS_STAGE}
+      RoleName: coa-publisher-task-execution-${env:DEPLOY_ENV}
       AssumeRolePolicyDocument:
         Statement:
         - Effect: Allow

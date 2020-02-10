@@ -3,5 +3,5 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /coa-publisher/janis-builder-${env:SLS_STAGE}
+      LogGroupName: /coa-publisher/janis-builder-${env:DEPLOY_ENV}
       RetentionInDays: 14

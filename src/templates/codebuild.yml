@@ -2,7 +2,7 @@ Resources:
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: coa-publisher-janis-builder-factory-${env:SLS_STAGE}
+      Name: coa-publisher-janis-builder-factory-${env:DEPLOY_ENV}
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
         Type: NO_ARTIFACTS
@@ -12,33 +12,20 @@ Resources:
         Image: aws/codebuild/standard:2.0
         PrivilegedMode: true # Required for building docker images and LOCAL caching
         EnvironmentVariables:
+          - Name: DEPLOY_ENV
+            Type: PLAINTEXT
+            Value: ${env:DEPLOY_ENV}
           # JANIS_BUILDER_BASE_ECR_URI is required for your janis-builder.Dockerfile to know which repo to pull from
           - Name: JANIS_BUILDER_BASE_ECR_URI
             Type: PLAINTEXT
-            Value:
-              - 'Fn::Join':
-                - ''
-                -
-                  - Ref: AWS::AccountId
-                  - '.dkr.ecr.'
-                  - Ref: AWS::Region
-                  - '.amazonaws.com/'
-                  - ${self:custom.JanisBuilderBaseEcrName}
+            Value: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderBaseEcrUri}
           # JANIS_BUILDER_ECR_URI is required for the CodeBuild buildspec.yml to know where to push your docker images after you've built them
           - Name: JANIS_BUILDER_ECR_URI
             Type: PLAINTEXT
-            Value:
-              - 'Fn::Join':
-                - ''
-                -
-                  - Ref: AWS::AccountId
-                  - '.dkr.ecr.'
-                  - Ref: AWS::Region
-                  - '.amazonaws.com/'
-                  - ${self:custom.JanisBuilderEcrName}
+            Value: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderEcrUri}
       Source:
         Type: S3
-        Location: coa-publisher/janis_builder_factory_source/${env:SLS_STAGE}
+        Location: coa-publisher/janis_builder_factory_source/${env:DEPLOY_ENV}
         BuildSpec: './buildspec.yml'
       TimeoutInMinutes: 20
       Cache:
@@ -48,7 +35,7 @@ Resources:
   CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: coa-publisher-janis-builder-factory-${env:SLS_STAGE}
+      RoleName: coa-publisher-janis-builder-factory-${env:DEPLOY_ENV}
       AssumeRolePolicyDocument:
         Statement:
         - Effect: Allow

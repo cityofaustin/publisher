@@ -1,4 +1,3 @@
-# Many thanks to: https://github.com/nathanpeck/aws-cloudformation-fargate/blob/master/fargate-networking-stacks/public-vpc.yml
 service: coa-publisher
 
 # plugins:
@@ -9,8 +8,6 @@ custom:
   #   webpackConfig: 'webpack.config.js'
   #   packager: 'yarn'
   #   keepOutputDirectory: true
-  JanisBuilderBaseEcrName: "cityofaustin/janis_builder_base"
-  JanisBuilderEcrName: "cityofaustin/janis_builder"
 
 package:
   individually: true
@@ -21,11 +18,11 @@ provider:
   deploymentBucket:
     name: coa-publisher
   region: ${env:AWS_REGION}
-  stage: ${env:SLS_STAGE}
-  stackName: coa-publisher-${env:SLS_STAGE}
+  stage: ${env:DEPLOY_ENV}
+  stackName: coa-publisher-${env:DEPLOY_ENV}
   stackTags:
     user:app: publisher
-    user:stage: ${env:SLS_STAGE}
+    user:env: ${env:DEPLOY_ENV}
     user:project: alpha.austin.gov
   vpc:
     securityGroupIds:
@@ -39,5 +36,4 @@ resources:
   - ${file(networking.yml)}
   - ${file(ecs.yml)}
   - ${file(logs.yml)}
-  - ${file(ecr.yml)}
   - ${file(codebuild.yml)}

@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 D=`dirname $BASH_SOURCE`
-export DEPLOY_ENV=${DEPLOY_ENV:-"staging"}
+source $D/../../.env # Source environment variables
+JANIS_BUILDER_BASE_D=$D/../janis_builder_base
 
-if [ "$DEPLOY_ENV" != "staging" ] && [ "$DEPLOY_ENV" != "prod" ]; then
-  echo "Error: DEPLOY_ENV must be set to 'staging' or 'prod'."
-  exit 1
-fi
+function clean_up {
+  if [ -f "$JANIS_BUILDER_BASE_D/ecr_uri.tmp" ]; then
+    echo "#### Cleaning up ecr_uri.tmp"
+    rm $JANIS_BUILDER_BASE_D/ecr_uri.tmp
+  fi
+}
+trap clean_up EXIT
 
 # Get Auth token in order to push docker image to ECR
 $(aws ecr get-login --no-include-email)
 
 # Get ECR Repo URI from Stack Outputs
-pipenv run python $D/get_ecr_uri.py
-source $D/ecr_uri.tmp
+pipenv run python $JANIS_BUILDER_BASE_D/get_ecr_uri.py
+source $JANIS_BUILDER_BASE_D/ecr_uri.tmp
 
 # Deploys a new staging janis-builder-base docker image to the City of Austin dockerhub
 TAG="$JANIS_BUILDER_BASE_ECR_URI:$DEPLOY_ENV-latest"
-docker build -f $D/janis-builder-base.Dockerfile -t $TAG $D
+docker build -f $JANIS_BUILDER_BASE_D/janis-builder-base.Dockerfile -t $TAG $JANIS_BUILDER_BASE_D
 docker push $TAG
 
 # janis-builder-base is used exclusively by codebuild as the base image to build new janis-builder images.
