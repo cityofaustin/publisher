@@ -37,3 +37,4 @@ resources:
   - ${file(ecs.yml)}
   - ${file(logs.yml)}
   - ${file(codebuild.yml)}
+  - ${file(dynamodb.yml)}

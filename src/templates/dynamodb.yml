@@ -1,6 +1,46 @@
 Resources:
-  DynamoDb:
+  BuildTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      AttributeDefinition:
+      TableName: coa_publisher_${env:DEPLOY_ENV}_builds
       KeySchema:
+        - AttributeName: janis
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: janis
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+        - AttributeName: stage
+          AttributeType: S
+      LocalSecondaryIndexes:
+        - IndexName: janis.stage
+          KeySchema:
+            - AttributeName: janis
+              KeyType: HASH
+            - AttributeName: stage
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+  RequestTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: coa_publisher_${env:DEPLOY_ENV}_requests
+      KeySchema:
+        - AttributeName: joplin.page
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: joplin.page
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
