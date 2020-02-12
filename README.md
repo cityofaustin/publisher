@@ -79,3 +79,7 @@ Follow the above steps
 
 ### 3. Deploy it
 `sh ./src/coa-publisher-mvp/deploy/deploy.sh`
+
+## Logs
+Logs for publishers run on AWS Lambda can be found here:
+https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logStream:group=/aws/lambda/coa-publisher-mvp-pr;streamFilter=typeLogStreamPrefix
