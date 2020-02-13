@@ -6,21 +6,19 @@ Resources:
       KeySchema:
         - AttributeName: pk
           KeyType: HASH
-        - AttributeName: timestamp
+        - AttributeName: sk
           KeyType: RANGE
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
-        - AttributeName: timestamp
+        - AttributeName: sk
           AttributeType: S
         - AttributeName: build_id
-          AttributeType: S
-        - AttributeName: state
           AttributeType: S
         - AttributeName: waiting
           AttributeType: S
       GlobalSecondaryIndexes:
-        - IndexName: build_id
+        - IndexName: build_id.janis
           KeySchema:
             - AttributeName: build_id
               KeyType: HASH
@@ -31,19 +29,8 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
-        - IndexName: state
-          KeySchema:
-            - AttributeName: state
-              KeyType: HASH
-            - AttributeName: build_id
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
       LocalSecondaryIndexes:
-        - IndexName: waiting
+        - IndexName: janis.waiting
           KeySchema:
             - AttributeName: pk
               KeyType: HASH

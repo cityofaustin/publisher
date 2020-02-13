@@ -1,29 +1,30 @@
 import os, boto3, json
-from boto3.dynamodb.conditions import Key, Attr
+
+from .helpers.get_datetime import get_datetime
 
 
 def send_request_handler(event, context):
-    data = json.loads(event["body"])
-    dynamo_client = boto3.client('dynamodb')
-    # if janis.building
-    # if janis.error
-    # if janis.queued
-    # else
+    data = json.loads(event)["body"]
+    dynamodb = boto3.resource('dynamodb')
+    publisher_table = dynamodb.Table(f'coa_publisher_{os.getenv("DEPLOY_ENV")}')
 
-    janis_branch = os.getenv("JANIS_BRANCH")
-    build_table = f'coa_publisher_{os.getenv("DEPLOY_ENV")}_builds'
-    requests_table = f'coa_publisher_{os.getenv("DEPLOY_ENV")}_requests'
-    def update():
-        item_building = dynamo_client.get_item(
-            TableName=build_table,
-            Key={
-                "janis": {"S": janis_branch},
-            }
-        )
+    timestamp = get_datetime()
 
-        print("congratulations")
+    # Throw errors if you're missing data
 
-    update()
+    publisher_table.put_item(
+        Item={
+            'pk': f'REQ#{data["janis"]}',
+            'sk': timestamp,
+            'waiting': f'waiting#{timestamp}',
+            'page_ids': data["page_ids"],
+            'joplin': data["joplin"],
+            'env_vars': data["env_vars"],
+            'build_type': "all_pages",
+        }
+    )
+
+    # return request_id
 
 if __name__ == "__main__":
     send_request_handler('', '')

@@ -14,6 +14,7 @@ awscli = "==1.16.248"
 boto3 = "==1.9.238"
 botocore = "==1.12.238"
 docker = "*"
+pytz = "*"
 
 [requires]
 python_version = "3.7"
