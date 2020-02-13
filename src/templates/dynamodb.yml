@@ -2,45 +2,55 @@ Resources:
   BuildTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: coa_publisher_${env:DEPLOY_ENV}_builds
+      TableName: coa_publisher_${env:DEPLOY_ENV}
       KeySchema:
-        - AttributeName: janis
+        - AttributeName: pk
           KeyType: HASH
         - AttributeName: timestamp
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: janis
+        - AttributeName: pk
           AttributeType: S
         - AttributeName: timestamp
           AttributeType: S
-        - AttributeName: stage
+        - AttributeName: build_id
           AttributeType: S
-      LocalSecondaryIndexes:
-        - IndexName: janis.stage
+        - AttributeName: state
+          AttributeType: S
+        - AttributeName: waiting
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: build_id
           KeySchema:
-            - AttributeName: janis
+            - AttributeName: build_id
               KeyType: HASH
-            - AttributeName: stage
+            - AttributeName: pk
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
-  RequestTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: coa_publisher_${env:DEPLOY_ENV}_requests
-      KeySchema:
-        - AttributeName: joplin.page
-          KeyType: HASH
-        - AttributeName: timestamp
-          KeyType: RANGE
-      AttributeDefinitions:
-        - AttributeName: joplin.page
-          AttributeType: S
-        - AttributeName: timestamp
-          AttributeType: S
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        - IndexName: state
+          KeySchema:
+            - AttributeName: state
+              KeyType: HASH
+            - AttributeName: build_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+      LocalSecondaryIndexes:
+        - IndexName: waiting
+          KeySchema:
+            - AttributeName: pk
+              KeyType: HASH
+            - AttributeName: waiting
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1

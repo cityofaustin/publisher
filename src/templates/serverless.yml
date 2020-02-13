@@ -4,6 +4,9 @@ service: coa-publisher
 #   - serverless-webpack
 
 custom:
+  pythonRequirements:
+    usePipenv: true
+    dockerizePip: true
   # webpack:
   #   webpackConfig: 'webpack.config.js'
   #   packager: 'yarn'
@@ -14,7 +17,7 @@ package:
 
 provider:
   name: aws
-  runtime: nodejs12.14.1
+  runtime: python3.7
   deploymentBucket:
     name: coa-publisher
   region: ${env:AWS_REGION}
