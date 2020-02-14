@@ -16,7 +16,7 @@ def send_request_handler(event, context):
         Item={
             'pk': f'REQ#{data["janis"]}',
             'sk': timestamp,
-            'waiting': f'waiting#{timestamp}',
+            'status': f'waiting#{timestamp}',
             'page_ids': data["page_ids"],
             'joplin': data["joplin"],
             'env_vars': data["env_vars"],
@@ -25,6 +25,3 @@ def send_request_handler(event, context):
     )
 
     # return request_id
-
-if __name__ == "__main__":
-    send_request_handler('', '')

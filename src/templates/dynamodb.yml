@@ -15,7 +15,7 @@ Resources:
           AttributeType: S
         - AttributeName: build_id
           AttributeType: S
-        - AttributeName: waiting
+        - AttributeName: status
           AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: build_id.janis
@@ -30,11 +30,11 @@ Resources:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
       LocalSecondaryIndexes:
-        - IndexName: janis.waiting
+        - IndexName: janis.status
           KeySchema:
             - AttributeName: pk
               KeyType: HASH
-            - AttributeName: waiting
+            - AttributeName: status
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
