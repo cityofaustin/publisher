@@ -28,7 +28,7 @@ def create_req_transact_item(updated_waiting_req):
     }
 
 
-def start_build_handler(event, context):
+def build_start_handler(event, context):
     data = json.loads(event)["body"]
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
@@ -159,4 +159,4 @@ def start_build_handler(event, context):
     print("hi")
 
 if __name__ == "__main__":
-    start_build_handler('', '')
+    build_start_handler('', '')
