@@ -37,7 +37,7 @@ def build_failure_handler(event, context):
 
     write_item_batches = []
     write_item_batch = []
-    # Delete the failed build_item
+    # Delete the failed "building" build_item
     deleted_build_item = {
         "Delete": {
             "TableName": table_name,
