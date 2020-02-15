@@ -28,9 +28,9 @@ def build_success_handler(event, context):
         return None
 
     build_config = build_item["Item"]
-    build_start_time = dateutil.parser.parse(build_config["build_id"].split('#')[2])
-    build_end_time = dateutil.parser.parse(timestamp)
-    build_time_total = str(build_end_time - build_start_time)
+    start_build_time = dateutil.parser.parse(build_config["build_id"].split('#')[2])
+    end_build_time = dateutil.parser.parse(timestamp)
+    total_build_time = str(end_build_time - start_build_time)
 
     write_item_batch = []
     # Delete the old "building" build_item
@@ -46,7 +46,7 @@ def build_success_handler(event, context):
     }
     # Create a new build_item that has all of the same properties as the original build_item
     # But resets the "sk" from "building" to "succeeded#{timestamp}".
-    # Adds "build_time_total"
+    # Adds "total_build_time"
     new_build_item = {
         "Put": {
             "TableName": table_name,
@@ -58,7 +58,7 @@ def build_success_handler(event, context):
                 "joplin": {'S': build_config["joplin"]},
                 "page_ids": {'L': [{'N': str(page_id)} for page_id in build_config["page_ids"]]},
                 "env_vars": {'M': {'S': env_var for env_var in build_config["env_vars"]}},
-                "build_time_total": {'S': build_time_total},
+                "total_build_time": {'S': total_build_time},
             },
             "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
         }

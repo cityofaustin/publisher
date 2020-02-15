@@ -10,8 +10,7 @@ function clean_up {
 trap clean_up EXIT
 
 # sls commands must be run from directory where your serverless.yml template lives
-SLS_D=$D/../templates
+SLS_D=$D/../..
 cd $SLS_D
 
-AWS_REGION=us-east-1
-sls deploy --config
+sls deploy

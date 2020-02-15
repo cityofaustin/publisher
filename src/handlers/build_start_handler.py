@@ -135,11 +135,11 @@ def build_start_handler(event, context):
         ExpressionAttributeValues = {}
         if "canceled_by" in updated_req:
             UpdateExpression = UpdateExpression + ", canceled_by = :canceled_by"
-            ExpressionAttributeValues[":status"] = {'S': f'cancelled#{updated_req["sk"]}'}
+            ExpressionAttributeValues[":status"] = {'S': f'cancelled#{timestamp}'}
             ExpressionAttributeValues[":canceled_by"] = {'S': updated_req["canceled_by"]}
         if "build_id" in updated_req:
             UpdateExpression = UpdateExpression + ", build_id = :build_id"
-            ExpressionAttributeValues[":status"] = {'S': f'assigned#{updated_req["sk"]}'}
+            ExpressionAttributeValues[":status"] = {'S': f'assigned#{timestamp}'}
             ExpressionAttributeValues[":build_id"] = {'S': updated_req["build_id"]}
         updated_req_item = {
             "Update": {

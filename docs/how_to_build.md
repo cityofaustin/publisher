@@ -10,3 +10,6 @@ Prereqs:
   - This will deploy all the CloudFormation resources for a publisher's DEPLOY_ENV.
 4. sh src/scripts/deploy_janis_builder_base.sh
   - This must be run after the CodeBuild Resource has been created by deploy_publisher.sh. This step builds the janis_builder_base image and updates the CodeBuild project to use it.
+
+
+Your logs can be found in cloudwatch under /aws/lambda/<service>-<stage>-<function>

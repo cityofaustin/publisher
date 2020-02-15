@@ -1,0 +1,65 @@
+service: coa-publisher
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dotenv-plugin
+custom:
+  pythonRequirements:
+    usePipenv: true
+    dockerizePip: true
+    useDownloadCache: true
+    useStaticCache: true
+  dotenv:
+    include:
+      - DEPLOY_ENV
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: python3.7
+  deploymentBucket:
+    name: coa-publisher
+  region: us-east-1
+  stage: ${env:DEPLOY_ENV}
+  stackName: coa-publisher-${env:DEPLOY_ENV}
+  stackTags:
+    user:app: publisher
+    user:env: ${env:DEPLOY_ENV}
+    user:project: alpha.austin.gov
+  vpc:
+    securityGroupIds:
+      - !Ref ClusterSecurityGroup
+    subnetIds:
+      - !Ref PublicSubnetOne
+      - !Ref PublicSubnetTwo
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeStream
+        - dynamodb:GetRecords
+        - dynamodb:GetShardIterator
+        - dynamodb:ListStreams
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:DeleteItem
+      Resource:
+        Fn::GetAtt: [BuildTable, Arn]
+
+functions:
+  queue:
+    handler: src/handlers/queue_handler.handler
+    events:
+      - stream:
+        type: dynamodb
+        arn:
+          Fn::GetAtt: [BuildTable, StreamArn]
+        batchSize: 1
+
+resources:
+  - ${file(src/templates/networking.yml)}
+  - ${file(src/templates/ecs.yml)}
+  - ${file(src/templates/logs.yml)}
+  - ${file(src/templates/codebuild.yml)}
+  - ${file(src/templates/dynamodb.yml)}
