@@ -13,3 +13,7 @@ Prereqs:
 
 
 Your logs can be found in cloudwatch under /aws/lambda/<service>-<stage>-<function>
+
+
+If you update Pipfile dependencies.
+1. `pipenv lock -r > src/handlers/requirements.txt` to update the requirements that go into the lambda function for your specific handler. Root Pipfile should still exist for dev administrative tasks (like deployment) that are distinct from lambda execution. 

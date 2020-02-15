@@ -15,6 +15,9 @@ custom:
 
 package:
   individually: true
+  exclude:
+    # Exclude everything by default, manually include the files you need for each lambda.
+    - ".*/**"
 
 provider:
   name: aws
@@ -49,7 +52,12 @@ provider:
 
 functions:
   queue:
-    handler: src/handlers/queue_handler.handler
+    handler: queue_handler.handler
+    module: src/handlers
+    timeout: 60
+    package:
+      include:
+        - src/handlers/**
     events:
       - stream:
           type: dynamodb

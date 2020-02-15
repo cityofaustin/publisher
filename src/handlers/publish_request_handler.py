@@ -3,7 +3,7 @@ import os, boto3, json
 from .helpers.get_datetime import get_datetime
 
 
-def send_request_handler(event, context):
+def handler(event, context):
     data = json.loads(event)["body"]
     dynamodb = boto3.resource('dynamodb')
     publisher_table = dynamodb.Table(f'coa_publisher_{os.getenv("DEPLOY_ENV")}')

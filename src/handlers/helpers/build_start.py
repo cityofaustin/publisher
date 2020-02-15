@@ -1,21 +1,20 @@
 import os, boto3, json
 from boto3.dynamodb.conditions import Key
 
-from .helpers.get_datetime import get_datetime
-
-table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
+from .get_datetime import get_datetime
 
 
-def build_start_handler(event, context):
-    data = json.loads(event)["body"]
+def build_start(janis_branch):
+    print(f"~~~ top of build_start with branch [{janis_branch}]")
+    print(f"boto version is {boto3.__version__}")
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
+    table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
 
-    janis_branch = data["janis"]
     build_pk = f'BLD#{janis_branch}'
     timestamp = get_datetime()
-
+    print("~~~~ about to get build_item")
     build_item = publisher_table.get_item(
         Key={
             'pk': build_pk,
@@ -24,7 +23,7 @@ def build_start_handler(event, context):
         ProjectionExpression='pk, sk, build_id',
     )
     if 'Item' in build_item:
-        print("There is already a current build running")
+        print(f"No new build started. There is already a current build running for {janis_branch}.")
         return None
 
     # Construct a build out of the waiting requests for a janis.
@@ -33,6 +32,7 @@ def build_start_handler(event, context):
     # (in terms of values for "joplin" and "env_vars").
     # There would only be conflicts for "joplin" values on PR builds,
     # where multiple joplins could potentially update the same janis instance.
+    print("~~~~ about to get waiting reqs")
     req_pk = f'REQ#{janis_branch}'
     waiting_reqs = publisher_table.query(
         IndexName="janis.status",
@@ -42,7 +42,7 @@ def build_start_handler(event, context):
     )['Items']
 
     if not len(waiting_reqs):
-        print("No requests to process")
+        print(f"No new build started. No requests to process for {janis_branch}.")
         return None
 
     build_config = {
@@ -102,7 +102,7 @@ def build_start_handler(event, context):
         build_config["page_ids"] = list(set(
             build_config["page_ids"] + req["page_ids"]
         ))
-
+    print("~~~building build_configs")
     write_item_batches = []
     write_item_batch = []
     new_build_item = {
@@ -156,6 +156,7 @@ def build_start_handler(event, context):
         }
         write_item_batch.append(updated_req_item)
     write_item_batches.append(write_item_batch)
-
+    print("~~~ about to write stuff")
     for write_item_batch in write_item_batches:
         client.transact_write_items(TransactItems=write_item_batch)
+    print(f"Started build for {janis_branch}: build_id={build_id}")
