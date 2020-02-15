@@ -45,17 +45,17 @@ provider:
         - dynamodb:PutItem
         - dynamodb:DeleteItem
       Resource:
-        Fn::GetAtt: [BuildTable, Arn]
+        Fn::GetAtt: [ BuildTable, Arn ]
 
 functions:
   queue:
     handler: src/handlers/queue_handler.handler
     events:
       - stream:
-        type: dynamodb
-        arn:
-          Fn::GetAtt: [BuildTable, StreamArn]
-        batchSize: 1
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [ BuildTable, StreamArn ]
+          batchSize: 1
 
 resources:
   - ${file(src/templates/networking.yml)}
