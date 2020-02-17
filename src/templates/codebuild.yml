@@ -79,3 +79,27 @@ Resources:
                 - "ecr:CompleteLayerUpload"
                 - "ecr:PutImage"
               Resource: '*'
+
+  CodeBuildTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: coa-publisher-janis-builder-factory-${env:DEPLOY_ENV}
+
+  CodeBuildCloudWatchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codebuild
+        detail-type:
+          - "CodeBuild Build State Change"
+        detail:
+          build-status:
+            - SUCCEEDED
+            - FAILED
+            - STOPPED
+          project-name:
+            - !Ref CodeBuildProject
+      Targets:
+        - Arn: !Ref CodeBuildTopic
+          Id: CodeBuildTopic

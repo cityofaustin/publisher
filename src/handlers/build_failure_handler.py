@@ -58,6 +58,7 @@ def build_failure_handler(event, context):
                 "pk": {'S': build_pk},
                 "sk": {'S': f"failed#{timestamp}"},
                 "build_id": {'S': build_config["build_id"]},
+                "status": {'S': "failed"},
                 "build_type": {'S': build_config["build_type"]},
                 "joplin": {'S': build_config["joplin"]},
                 "page_ids": {'L': [{'N': str(page_id)} for page_id in build_config["page_ids"]]},

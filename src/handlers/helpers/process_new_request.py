@@ -4,7 +4,7 @@ from boto3.dynamodb.conditions import Key
 from .get_datetime import get_datetime
 
 
-def build_start(janis_branch):
+def process_new_request(janis_branch):
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
@@ -109,6 +109,7 @@ def build_start(janis_branch):
                 "pk": {'S': build_pk},
                 "sk": {'S': "building"},
                 "build_id": {'S': build_config["build_id"]},
+                "status": {'S': 'preparing_to_start'},
                 "build_type": {'S': build_config["build_type"]},
                 "joplin": {'S': build_config["joplin"]},
                 "page_ids": {'L': [{'N': str(page_id)} for page_id in build_config["page_ids"]]},

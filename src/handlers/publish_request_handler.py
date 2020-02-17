@@ -20,7 +20,7 @@ def handler(event, context):
             'page_ids': data["page_ids"],
             'joplin': data["joplin"],
             'env_vars': data["env_vars"],
-            'build_type': "all_pages",
+            'build_type': data["build_type"],
         }
     )
 

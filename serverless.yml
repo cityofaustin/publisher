@@ -53,6 +53,11 @@ provider:
           - ''
           - - Fn::GetAtt: [ BuildTable, Arn ]
             - '/index/*'
+    - Effect: Allow
+      Action:
+        - codebuild:StartBuild
+      Resource:
+        Fn::GetAtt: [ CodeBuildProject, Arn ]
 
 functions:
   queue:
@@ -68,6 +73,18 @@ functions:
           arn:
             Fn::GetAtt: [ BuildTable, StreamArn ]
           batchSize: 1
+  janisBuilderFactory:
+    handler: janis_builder_factory_handler.handler
+    module: src/handlers
+    timeout: 60
+    package:
+      include:
+        - src/handlers/**
+    events:
+      - sns:
+          arn: !Ref CodeBuildTopic
+          topicName: Fn::GetAtt [ CodeBuildTopic, TopicName ]
+
 
 resources:
   - ${file(src/templates/networking.yml)}
