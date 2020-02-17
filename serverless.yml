@@ -31,24 +31,28 @@ provider:
     user:app: publisher
     user:env: ${env:DEPLOY_ENV}
     user:project: alpha.austin.gov
-  vpc:
-    securityGroupIds:
-      - !Ref ClusterSecurityGroup
-    subnetIds:
-      - !Ref PublicSubnetOne
-      - !Ref PublicSubnetTwo
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - dynamodb:DescribeStream
-        - dynamodb:GetRecords
-        - dynamodb:GetShardIterator
-        - dynamodb:ListStreams
+        - dynamodb:BatchGetItem
+        - dynamodb:DeleteItem
         - dynamodb:GetItem
         - dynamodb:PutItem
-        - dynamodb:DeleteItem
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:UpdateItem
+        - dynamodb:BatchWriteItem
       Resource:
         Fn::GetAtt: [ BuildTable, Arn ]
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:Query
+      Resource:
+        Fn::Join:
+          - ''
+          - - Fn::GetAtt: [ BuildTable, Arn ]
+            - '/index/*'
 
 functions:
   queue:

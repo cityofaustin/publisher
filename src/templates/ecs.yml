@@ -2,7 +2,7 @@ Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: 'coa-publisher'
+      ClusterName: coa-publisher-${env:DEPLOY_ENV}
   # A security group for the containers we will run in our ECS Cluster.
   ClusterSecurityGroup:
     Type: AWS::EC2::SecurityGroup

@@ -13,5 +13,5 @@ def handler(event, context):
             (event_name == "INSERT") and
             (pk.startswith("REQ"))
         ):
-            print("New publish request submitted.")
+            print("##### New publish request submitted.")
             build_start(janis_branch)

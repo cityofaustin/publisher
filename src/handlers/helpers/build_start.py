@@ -5,8 +5,6 @@ from .get_datetime import get_datetime
 
 
 def build_start(janis_branch):
-    print(f"~~~ top of build_start with branch [{janis_branch}]")
-    print(f"boto version is {boto3.__version__}")
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
@@ -14,7 +12,6 @@ def build_start(janis_branch):
 
     build_pk = f'BLD#{janis_branch}'
     timestamp = get_datetime()
-    print("~~~~ about to get build_item")
     build_item = publisher_table.get_item(
         Key={
             'pk': build_pk,
@@ -23,7 +20,7 @@ def build_start(janis_branch):
         ProjectionExpression='pk, sk, build_id',
     )
     if 'Item' in build_item:
-        print(f"No new build started. There is already a current build running for {janis_branch}.")
+        print(f"##### No new build started. There is already a current build running for {janis_branch}.")
         return None
 
     # Construct a build out of the waiting requests for a janis.
@@ -32,7 +29,6 @@ def build_start(janis_branch):
     # (in terms of values for "joplin" and "env_vars").
     # There would only be conflicts for "joplin" values on PR builds,
     # where multiple joplins could potentially update the same janis instance.
-    print("~~~~ about to get waiting reqs")
     req_pk = f'REQ#{janis_branch}'
     waiting_reqs = publisher_table.query(
         IndexName="janis.status",
@@ -42,11 +38,12 @@ def build_start(janis_branch):
     )['Items']
 
     if not len(waiting_reqs):
-        print(f"No new build started. No requests to process for {janis_branch}.")
+        print(f"##### No new build started. No requests to process for {janis_branch}.")
         return None
 
+    build_id = f'BLD#{janis_branch}#{timestamp}'
     build_config = {
-        "build_id": f'BLD#{janis_branch}#{timestamp}',
+        "build_id": build_id,
         "build_type": None,
         "joplin": None,
         "page_ids": [],
@@ -70,11 +67,11 @@ def build_start(janis_branch):
         else:
             # If req is for a different joplin, then cancel it.
             if req["joplin"] != build_config["joplin"]:
-                updated_req["canceled_by"] = build_config["build_id"]
-                # A "cancelled" req will not have a build_id assigned to it
+                updated_req["canceled_by"] = build_id
+                # A "cancelled" req will not have a "build_id" attribute assigned to it
                 # And the data from a "cancelled" req should not be added to the build_config
                 continue
-        updated_req["build_id"] = build_config["build_id"]
+        updated_req["build_id"] = build_id
 
         # Handle "env_vars" attribute
         for env_var in req["env_vars"]:
@@ -102,7 +99,7 @@ def build_start(janis_branch):
         build_config["page_ids"] = list(set(
             build_config["page_ids"] + req["page_ids"]
         ))
-    print("~~~building build_configs")
+
     write_item_batches = []
     write_item_batch = []
     new_build_item = {
@@ -156,7 +153,7 @@ def build_start(janis_branch):
         }
         write_item_batch.append(updated_req_item)
     write_item_batches.append(write_item_batch)
-    print("~~~ about to write stuff")
+
     for write_item_batch in write_item_batches:
         client.transact_write_items(TransactItems=write_item_batch)
-    print(f"Started build for {janis_branch}: build_id={build_id}")
+    print(f"##### Started build for {janis_branch}: build_id={build_id}")
