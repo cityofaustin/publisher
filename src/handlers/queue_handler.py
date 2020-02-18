@@ -10,11 +10,6 @@ def handler(event, context):
         sk = new_item["sk"]["S"]
         janis_branch = pk.split("#")[1]
 
-        # print("#### event:")
-        # print(event)
-        # print("#### context:")
-        # print(context)
-
         # If we got a new request, see if we can start a build
         if (
             (event_name == "INSERT") and

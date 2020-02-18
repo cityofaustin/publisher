@@ -38,59 +38,72 @@ Resources:
       RoleName: coa-publisher-janis-builder-factory-${env:DEPLOY_ENV}
       AssumeRolePolicyDocument:
         Statement:
-        - Effect: Allow
-          Principal:
-            Service: [codebuild.amazonaws.com]
-          Action: ['sts:AssumeRole']
+          - Effect: Allow
+            Principal:
+              Service: [codebuild.amazonaws.com]
+            Action: ['sts:AssumeRole']
       Path: /
       Policies:
-        - PolicyName: AmazonECSTaskExecutionRolePolicy
+        - PolicyName: CodeBuildExecution
           PolicyDocument:
             Statement:
-            - Effect: Allow
-              Action:
-                # retrieve custom environment variables stored in Amazon EC2 Systems Manager Parameter Store
-                - 'ssm:GetParameters'
-                # Allow the ECS tasks to upload logs to CloudWatch
-                - 'logs:*'
-              Resource: '*'
-            - Effect: Allow
-              Action:
-                # allow reading from coa-publisher-codebuild s3 bucket
-                - 's3:ListBucket'
-              Resource: 'arn:aws:s3:::coa-publisher'
-            - Effect: Allow
-              Action:
-                # allow GET/PUT for objects in coa-publisher-codebuild s3 bucket
-                - 's3:GetBucketLocation'
-                - 's3:GetObject'
-                - 's3:DeleteObject'
-                - 's3:PutObject'
-              Resource: 'arn:aws:s3:::coa-publisher/*'
-            - Effect: Allow
-              Action:
-                # get permission to pull janis_builder_base image from ECR
-                - "ecr:GetAuthorizationToken"
-                - "ecr:GetDownloadUrlForLayer"
-                - "ecr:BatchGetImage"
-                - "ecr:BatchCheckLayerAvailability"
-                - "ecr:InitiateLayerUpload"
-                - "ecr:UploadLayerPart"
-                - "ecr:CompleteLayerUpload"
-                - "ecr:PutImage"
-              Resource: '*'
+              - Effect: Allow
+                Action:
+                  # retrieve custom environment variables stored in Amazon EC2 Systems Manager Parameter Store
+                  - 'ssm:GetParameters'
+                  # Allow the ECS tasks to upload logs to CloudWatch
+                  - 'logs:*'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  # allow reading from coa-publisher-codebuild s3 bucket
+                  - 's3:ListBucket'
+                Resource: 'arn:aws:s3:::coa-publisher'
+              - Effect: Allow
+                Action:
+                  # allow GET/PUT for objects in coa-publisher-codebuild s3 bucket
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObject'
+                  - 's3:DeleteObject'
+                  - 's3:PutObject'
+                Resource: 'arn:aws:s3:::coa-publisher/*'
+              - Effect: Allow
+                Action:
+                  # get permission to pull janis_builder_base image from ECR
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:InitiateLayerUpload"
+                  - "ecr:UploadLayerPart"
+                  - "ecr:CompleteLayerUpload"
+                  - "ecr:PutImage"
+                Resource: '*'
 
   CodeBuildTopic:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: coa-publisher-janis-builder-factory-${env:DEPLOY_ENV}
 
+  CodeBuildTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref CodeBuildTopic
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 'events.amazonaws.com'
+            Action: sns:Publish
+            Resource: !Ref CodeBuildTopic
+
   CodeBuildCloudWatchRule:
     Type: AWS::Events::Rule
     Properties:
       EventPattern:
         source:
-          - aws.codebuild
+          - "aws.codebuild"
         detail-type:
           - "CodeBuild Build State Change"
         detail:
@@ -100,6 +113,7 @@ Resources:
             - STOPPED
           project-name:
             - !Ref CodeBuildProject
+      State: ENABLED
       Targets:
         - Arn: !Ref CodeBuildTopic
           Id: CodeBuildTopic
