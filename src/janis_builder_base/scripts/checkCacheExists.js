@@ -30,5 +30,6 @@ async function checkCacheExists(janisBranch){
 }
 
 if (require.main === module) {
-  checkCacheExists(process.env.JANIS_BRANCH)
+  const cacheToCheck = process.argv[2]
+  checkCacheExists(cacheToCheck)
 }

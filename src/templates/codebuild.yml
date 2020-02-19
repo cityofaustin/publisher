@@ -25,13 +25,14 @@ Resources:
             Value: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderEcrUri}
       Source:
         Type: S3
-        Location: coa-publisher/janis_builder_factory_source/${env:DEPLOY_ENV}
+        Location: coa-publisher/janis_builder_factory_source/${env:DEPLOY_ENV}/
         BuildSpec: './buildspec.yml'
       TimeoutInMinutes: 20
       Cache:
         Type: LOCAL # Caches Docker layers on AWS Host build machine
         Modes:
           - LOCAL_DOCKER_LAYER_CACHE
+
   CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:

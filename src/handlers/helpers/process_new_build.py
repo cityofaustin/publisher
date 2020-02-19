@@ -57,7 +57,7 @@ def process_new_build(janis_branch, context):
                     "type": "PLAINTEXT",
                 },
                 {
-                    "name": "build_id",
+                    "name": "BUILD_ID",
                     "value": build_id,
                     "type": "PLAINTEXT",
                 }

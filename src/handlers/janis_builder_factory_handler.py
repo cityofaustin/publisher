@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute 
 
 from helpers.process_build_failure import process_build_failure
 import helpers.stages as stages
-from helpers.utils import get_lambda_cloudwatch_url, get_current_build_item
+from helpers.utils import get_lambda_cloudwatch_url, parse_build_id
 
 
 def handler(event, context):
@@ -12,22 +12,15 @@ def handler(event, context):
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
 
-    # Get janis_branch from CodeBuild result
     codebuild_data = json.loads(event["Records"][0]["Sns"]['Message'])['detail']
     for env_var in codebuild_data['additional-information']['environment']['environment-variables']:
-        if (env_var['name'] == 'JANIS_BRANCH'):
-            janis_branch = env_var['value']
+        if (env_var['name'] == 'BUILD_ID'):
+            build_id = env_var['value']
             break
-
-    build_item = get_current_build_item(janis_branch)
-    if not build_item:
-        return None
-
-    # Update the logs for that BLD
-    build_id = build_item["build_id"]
-    build_pk = build_item["pk"]
-    build_sk = build_item["sk"]
     print(f"##### janis_builder_factory stage finished for [{build_id}].")
+    # Update the logs for that BLD
+    build_pk, build_sk = parse_build_id(build_id)
+    janis_branch = build_pk.split("#")[1]
     lambda_cloudwatch_url = get_lambda_cloudwatch_url(context)
     project_name = codebuild_data['project-name']
     stream_name = codebuild_data['additional-information']['logs']['stream-name']

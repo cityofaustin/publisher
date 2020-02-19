@@ -26,9 +26,14 @@ function upload_cache {
   node $D/s3Upload.js $janis_dir/yarn.lock cache/$JANIS_BRANCH/yarn.lock
 }
 
+function run_yarn_install {
+  yarn install --cwd $janis_dir
+  upload_cache
+}
+
 # Check if a cache exists for your particular $JANIS_BRANCH
 # $CACHE_EXISTS written to cache_exists.tmp by checkCacheExists.js
-node $D/checkCacheExists.js
+node $D/checkCacheExists.js "$JANIS_BRANCH"
 source $D/cache_exists.tmp
 
 # Use cached node_modules if a cache exists and the yarn.lock is unchanged.
@@ -39,8 +44,20 @@ if [[ "$CACHE_EXISTS" == "True" ]]; then
 else
   # If no node_module cache exists from your branch, check if master's node_modules can be used.
   echo "#### no cache exists for branch: $JANIS_BRANCH. Trying cache for master branch."
-  SOURCE_BRANCH=master
-  CURRENT_BRANCH_CACHE=False
+  node $D/checkCacheExists.js "master"
+  source $D/cache_exists.tmp
+  if [[ "$CACHE_EXISTS" == "True" ]]; then
+    echo "#### cache exists for master"
+    SOURCE_BRANCH=master
+    CURRENT_BRANCH_CACHE=False
+  fi
+fi
+
+# If no SOURCE_BRANCH was not set (because there isn't a cache for "master")
+# Then install local dependencies and upload a new cache
+if [ -z $SOURCE_BRANCH ]; then
+  run_yarn_install
+  exit 0
 fi
 
 # Copy down cached yarn.lock
@@ -74,6 +91,5 @@ if [ "$yarn_lock_diff" = "" ]; then
   fi
 else
   echo "#### yarn.lock changed. Re-installing node_modules."
-  yarn install --cwd $janis_dir
-  upload_cache
+  run_yarn_install
 fi

@@ -1,13 +1,5 @@
 version: 0.2
 
-env:
-  variables:
-    JANIS_BRANCH: ""
-    JOPLIN_BRANCH: ""
-    DEST: ""
-    CMS_MEDIA: ""
-    # JANIS_BUILDER_ECR_URI is set within CodeBuildProject CloudFormation instructions
-    # JANIS_BUILDER_BASE_ECR_URI is set within CodeBuildProject CloudFormation instructions
 phases:
   install:
     runtime-versions:
