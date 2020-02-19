@@ -1,10 +1,12 @@
 import os, boto3, json
 from boto3.dynamodb.conditions import Attr
 
-from .get_datetime import get_datetime
+from helpers.get_datetime import get_datetime
+import helpers.stages as stages
 
 
-def process_new_build(janis_branch):
+def process_new_build(janis_branch, context):
+    print("##### New build request submitted.")
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
@@ -16,17 +18,15 @@ def process_new_build(janis_branch):
             'pk': build_pk,
             'sk': 'building',
         },
-        ProjectionExpression='pk, sk, #s, build_type',
-        ExpressionAttributeNames={ "#s": "status" },
+        ProjectionExpression='pk, sk, stage, build_id, build_type',
     )
     if not 'Item' in build_item:
-        print(f"##### No 'building' BLD found for {build_pk}.")
+        print(f'##### No "building" BLD found for {build_pk}.')
         return None
 
-    build_status = build_item["Item"]["status"]
-    preparing_to_start_status = "preparing_to_start"
-    if build_status != preparing_to_start_status:
-        print(f"##### Build {build_pk} already started")
+    build_stage = build_item["Item"]["stage"]
+    if build_stage != stages.preparing_to_build:
+        print(f'##### Build {build_item["Item"]["build_id"]} already started')
         return None
 
     build_type = build_item["Item"]["build_type"]
@@ -37,12 +37,11 @@ def process_new_build(janis_branch):
                 'pk': build_pk,
                 'sk': 'building',
             },
-            UpdateExpression="SET #s = :status",
-            ExpressionAttributeNames={ "#s": "status" },
+            UpdateExpression="SET stage = :stage",
             ExpressionAttributeValues={
-                ":status": "janis_builder_factory"
+                ":stage": stages.janis_builder_factory,
             },
-            ConditionExpression=Attr('status').eq(preparing_to_start_status),
+            ConditionExpression=Attr('stage').eq(stages.preparing_to_build),
         )
         # Start CodeBuild Project
         codebuild = boto3.client('codebuild')
@@ -62,7 +61,7 @@ def process_new_build(janis_branch):
                 },
             ],
         )
-        print(res)
+        print(f"##### Starting janis_builder_factory for {build_pk}")
     else:
         print("##### skipping for now.")
         # We need to run task

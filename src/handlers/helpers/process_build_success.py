@@ -2,18 +2,15 @@ import os, boto3, json
 from boto3.dynamodb.conditions import Key
 import dateutil.parser
 
-from .helpers.get_datetime import get_datetime
-
-table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
+from helpers.get_datetime import get_datetime
 
 
-def build_success_handler(event, context):
-    data = json.loads(event)["body"]
+def process_build_success(janis_branch, context):
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
+    table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
 
-    janis_branch = data["janis"]
     build_pk = f'BLD#{janis_branch}'
     timestamp = get_datetime()
 

@@ -1,21 +1,19 @@
 import os, boto3, json
 from boto3.dynamodb.conditions import Key
 
-from .helpers.get_datetime import get_datetime
-
-table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
+from helpers.get_datetime import get_datetime
 
 
-def build_failure_handler(event, context):
-    data = json.loads(event)["body"]
+def process_build_failure(janis_branch, context):
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
+    table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
 
-    janis_branch = data["janis"]
     build_pk = f'BLD#{janis_branch}'
     timestamp = get_datetime()
 
+    print(f"##### Build {build_pk} failed. Check dynamodb for details.")
     build_item = publisher_table.get_item(
         Key={
             'pk': build_pk,
@@ -23,7 +21,7 @@ def build_failure_handler(event, context):
         },
     )
     if not 'Item' in build_item:
-        print("Failed build has already been handled")
+        print(f"##### Failed build {build_pk} has already been handled")
         return None
 
     build_id = build_item["Item"]["build_id"]
@@ -58,7 +56,7 @@ def build_failure_handler(event, context):
                 "pk": {'S': build_pk},
                 "sk": {'S': f"failed#{timestamp}"},
                 "build_id": {'S': build_config["build_id"]},
-                "status": {'S': "failed"},
+                "stage": {'S': build_config["stage"]},
                 "build_type": {'S': build_config["build_type"]},
                 "joplin": {'S': build_config["joplin"]},
                 "page_ids": {'L': [{'N': str(page_id)} for page_id in build_config["page_ids"]]},
@@ -100,3 +98,4 @@ def build_failure_handler(event, context):
 
     for write_item_batch in write_item_batches:
         client.transact_write_items(TransactItems=write_item_batch)
+    print(f"##### Build failure processing for {build_pk} is complete.")

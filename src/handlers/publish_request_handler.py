@@ -1,6 +1,7 @@
-import os, boto3, json
+import os, boto3, json, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute import of "helpers" as a module
 
-from .helpers.get_datetime import get_datetime
+from helpers.get_datetime import get_datetime
 
 
 def handler(event, context):

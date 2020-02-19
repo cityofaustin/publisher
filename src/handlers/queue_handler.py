@@ -1,3 +1,6 @@
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute import of "helpers" as a module
+
 from helpers.process_new_build import process_new_build
 from helpers.process_new_request import process_new_request
 
@@ -15,13 +18,11 @@ def handler(event, context):
             (event_name == "INSERT") and
             (pk.startswith("REQ"))
         ):
-            print("##### New publish request submitted.")
-            process_new_request(janis_branch)
+            process_new_request(janis_branch, context)
         # If we get a new build submission, start the build
         elif (
             (event_name == "INSERT") and
             (pk.startswith("BLD")) and
             (sk == "building")
         ):
-            print("##### New build request submitted.")
-            process_new_build(janis_branch)
+            process_new_build(janis_branch, context)

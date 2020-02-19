@@ -1,10 +1,13 @@
 import os, boto3, json
 from boto3.dynamodb.conditions import Key
 
-from .get_datetime import get_datetime
+from helpers.get_datetime import get_datetime
+import helpers.stages as stages
+from helpers.get_lambda_cloudwatch_url import get_lambda_cloudwatch_url
 
 
-def process_new_request(janis_branch):
+def process_new_request(janis_branch, context):
+    print("##### New publish request submitted.")
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
@@ -109,11 +112,19 @@ def process_new_request(janis_branch):
                 "pk": {'S': build_pk},
                 "sk": {'S': "building"},
                 "build_id": {'S': build_config["build_id"]},
-                "status": {'S': 'preparing_to_start'},
+                "stage": {'S': stages.preparing_to_build},
                 "build_type": {'S': build_config["build_type"]},
                 "joplin": {'S': build_config["joplin"]},
                 "page_ids": {'L': [{'N': str(page_id)} for page_id in build_config["page_ids"]]},
-                "env_vars": {'M': {'S': env_var for env_var in build_config["env_vars"]}},
+                "env_vars": {'M': {key:{'S': value} for (key,value) in build_config["env_vars"]}},
+                "logs": {'L': [
+                    {
+                        'M': {
+                            'stage': {'S': stages.preparing_to_build},
+                            'url': {'S': get_lambda_cloudwatch_url(context)},
+                        }
+                    }
+                ]},
             },
             "ConditionExpression": "attribute_not_exists(sk)", # make sure that another process with sk="building" hasn't started already
             "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
