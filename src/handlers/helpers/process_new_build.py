@@ -1,41 +1,38 @@
-import os, boto3, json
+import os, boto3
 from boto3.dynamodb.conditions import Attr
 
-from helpers.get_datetime import get_datetime
+from helpers.utils import get_datetime, parse_build_id, get_current_build_item
 import helpers.stages as stages
 
 
 def process_new_build(janis_branch, context):
-    print("##### New build request submitted.")
+    print(f'##### New build request submitted for [{janis_branch}].')
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
 
-    build_pk = f'BLD#{janis_branch}'
-    timestamp = get_datetime()
-    build_item = publisher_table.get_item(
-        Key={
-            'pk': build_pk,
-            'sk': 'building',
-        },
-        ProjectionExpression='pk, sk, stage, build_id, build_type',
-    )
-    if not 'Item' in build_item:
-        print(f'##### No "building" BLD found for {build_pk}.')
+    # Get BLD data
+    build_item = get_current_build_item(janis_branch)
+    if not build_item:
         return None
+    build_id = build_item["build_id"]
+    build_pk = build_item["pk"]
+    build_sk = build_item["sk"]
 
-    build_stage = build_item["Item"]["stage"]
+    # Skip if we've alrady processed this BLD already
+    build_stage = build_item["stage"]
     if build_stage != stages.preparing_to_build:
-        print(f'##### Build {build_item["Item"]["build_id"]} already started')
+        print(f'##### Build [{build_id}] already started')
         return None
 
-    build_type = build_item["Item"]["build_type"]
+    # Start a build, based on your BLD's build_type
+    build_type = build_item["build_type"]
     if build_type == "rebuild":
         # Update the build status
         publisher_table.update_item(
             Key={
                 'pk': build_pk,
-                'sk': 'building',
+                'sk': build_sk,
             },
             UpdateExpression="SET stage = :stage",
             ExpressionAttributeValues={
@@ -59,9 +56,14 @@ def process_new_build(janis_branch, context):
                     "value": "placeholder!",
                     "type": "PLAINTEXT",
                 },
+                {
+                    "name": "build_id",
+                    "value": build_id,
+                    "type": "PLAINTEXT",
+                }
             ],
         )
-        print(f"##### Starting janis_builder_factory for {build_pk}")
+        print(f"##### Starting janis_builder_factory for [{build_id}]")
     else:
         print("##### skipping for now.")
         # We need to run task

@@ -1,14 +1,13 @@
 import os, boto3, json, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute import of "helpers" as a module
 
-from helpers.get_datetime import get_datetime
+from helpers.utils import get_datetime
 
 
 def handler(event, context):
     data = json.loads(event)["body"]
     dynamodb = boto3.resource('dynamodb')
     publisher_table = dynamodb.Table(f'coa_publisher_{os.getenv("DEPLOY_ENV")}')
-
     timestamp = get_datetime()
 
     # Throw errors if you're missing data

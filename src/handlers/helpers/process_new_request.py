@@ -1,9 +1,8 @@
 import os, boto3, json
 from boto3.dynamodb.conditions import Key
 
-from helpers.get_datetime import get_datetime
+from helpers.utils import get_datetime, get_lambda_cloudwatch_url, get_current_build_item
 import helpers.stages as stages
-from helpers.get_lambda_cloudwatch_url import get_lambda_cloudwatch_url
 
 
 def process_new_request(janis_branch, context):
@@ -12,18 +11,11 @@ def process_new_request(janis_branch, context):
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
-
-    build_pk = f'BLD#{janis_branch}'
     timestamp = get_datetime()
-    build_item = publisher_table.get_item(
-        Key={
-            'pk': build_pk,
-            'sk': 'building',
-        },
-        ProjectionExpression='pk, sk, build_id',
-    )
-    if 'Item' in build_item:
-        print(f"##### No new build started. There is already a current build running for {janis_branch}.")
+
+    build_item = get_current_build_item(janis_branch)
+    if build_item:
+        print(f"##### No new build started. There is already a current build running for [{janis_branch}].")
         return None
 
     # Construct a build out of the waiting requests for a janis.
@@ -45,6 +37,7 @@ def process_new_request(janis_branch, context):
         return None
 
     build_id = f'BLD#{janis_branch}#{timestamp}'
+    build_pk = f'BLD#{janis_branch}'
     build_config = {
         "build_id": build_id,
         "build_type": None,
@@ -105,18 +98,32 @@ def process_new_request(janis_branch, context):
 
     write_item_batches = []
     write_item_batch = []
+    new_current_build_item = {
+        "Put": {
+            "TableName": table_name,
+            "Item": {
+                "pk": {'S': "CURRENT_BLD"},
+                "sk": {'S': janis_branch},
+                "build_id": {'S': build_config["build_id"]},
+            },
+            # ConditionExpression makes sure that there isn't another build process already running for the same janis_branch
+            "ConditionExpression": "attribute_not_exists(build_id)",
+            "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
+        }
+    }
     new_build_item = {
         "Put": {
             "TableName": table_name,
             "Item": {
                 "pk": {'S': build_pk},
-                "sk": {'S': "building"},
+                "sk": {'S': timestamp},
                 "build_id": {'S': build_config["build_id"]},
+                "status": {'S': "building"},
                 "stage": {'S': stages.preparing_to_build},
                 "build_type": {'S': build_config["build_type"]},
                 "joplin": {'S': build_config["joplin"]},
                 "page_ids": {'L': [{'N': str(page_id)} for page_id in build_config["page_ids"]]},
-                "env_vars": {'M': {key:{'S': value} for (key,value) in build_config["env_vars"]}},
+                "env_vars": {'M': {key: {'S': value} for (key, value) in build_config["env_vars"]}},
                 "logs": {'L': [
                     {
                         'M': {
@@ -126,10 +133,10 @@ def process_new_request(janis_branch, context):
                     }
                 ]},
             },
-            "ConditionExpression": "attribute_not_exists(sk)", # make sure that another process with sk="building" hasn't started already
             "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
         }
     }
+    write_item_batch.append(new_current_build_item)
     write_item_batch.append(new_build_item)
 
     for updated_req in updated_req_configs:

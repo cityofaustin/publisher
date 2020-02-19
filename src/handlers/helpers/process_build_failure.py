@@ -1,7 +1,7 @@
 import os, boto3, json
 from boto3.dynamodb.conditions import Key
 
-from helpers.get_datetime import get_datetime
+from helpers.utils import get_datetime, get_current_build_item
 
 
 def process_build_failure(janis_branch, context):
@@ -9,23 +9,18 @@ def process_build_failure(janis_branch, context):
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
-
-    build_pk = f'BLD#{janis_branch}'
     timestamp = get_datetime()
 
-    print(f"##### Build {build_pk} failed. Check dynamodb for details.")
-    build_item = publisher_table.get_item(
-        Key={
-            'pk': build_pk,
-            'sk': 'building',
-        },
-    )
-    if not 'Item' in build_item:
-        print(f"##### Failed build {build_pk} has already been handled")
+    build_item = get_current_build_item(janis_branch)
+    if not build_item:
+        print(f"##### Failed build for [{janis_branch}] has already been handled")
         return None
 
-    build_id = build_item["Item"]["build_id"]
+    build_id = build_item["build_id"]
+    build_pk = build_item["pk"]
+    build_sk = build_item["sk"]
     req_pk = f'REQ#{janis_branch}'
+    print(f"##### Build for [{build_id}] failed.")
     assinged_reqs = publisher_table.query(
         IndexName="build_id.janis",
         Select='ALL_ATTRIBUTES',
@@ -35,38 +30,38 @@ def process_build_failure(janis_branch, context):
 
     write_item_batches = []
     write_item_batch = []
-    # Delete the failed "building" build_item
-    deleted_build_item = {
-        "Delete": {
+    updated_current_build_item = {
+        "Update": {
+            "TableName": table_name,
+            "Key": {
+                "pk": {'S': "CURRENT_BLD"},
+                "sk": {'S': janis_branch},
+            },
+            "UpdateExpression": "REMOVE build_id",
+            "ConditionExpression": "build_id = :build_id",
+            "ExpressionAttributeValues": {
+                ":build_id": {'S': build_id},
+            },
+            "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
+        }
+    }
+    updated_build_item = {
+        "Update": {
             "TableName": table_name,
             "Key": {
                 "pk": {'S': build_pk},
-                "sk": {'S': "building"},
+                "sk": {'S': build_sk},
             },
+            "UpdateExpression": "SET #s = :status",
+            "ExpressionAttributeValues": {
+                ":status": {'S': f'failed#{timestamp}'},
+            },
+            "ExpressionAttributeNames": { "#s": "status" },
             "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
         }
     }
-    # Create a new build_item that has all of the same properties as the original build_item
-    # But resets the "sk" from "building" to "failed#{timestamp}"
-    build_config = build_item["Item"]
-    new_build_item = {
-        "Put": {
-            "TableName": table_name,
-            "Item": {
-                "pk": {'S': build_pk},
-                "sk": {'S': f"failed#{timestamp}"},
-                "build_id": {'S': build_config["build_id"]},
-                "stage": {'S': build_config["stage"]},
-                "build_type": {'S': build_config["build_type"]},
-                "joplin": {'S': build_config["joplin"]},
-                "page_ids": {'L': [{'N': str(page_id)} for page_id in build_config["page_ids"]]},
-                "env_vars": {'M': {'S': env_var for env_var in build_config["env_vars"]}},
-            },
-            "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
-        }
-    }
-    write_item_batch.append(deleted_build_item)
-    write_item_batch.append(new_build_item)
+    write_item_batch.append(updated_current_build_item)
+    write_item_batch.append(updated_build_item)
 
     for req in assinged_reqs:
         # transact_write_items() allows a maximum of 25 TransactItems.
@@ -90,7 +85,6 @@ def process_build_failure(janis_branch, context):
                     ":empty_list": {'L': []},
                     ":failed_build_id": {'L': [{'S': build_id}]},
                 },
-                "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
             }
         }
         write_item_batch.append(updated_req_item)
@@ -98,4 +92,4 @@ def process_build_failure(janis_branch, context):
 
     for write_item_batch in write_item_batches:
         client.transact_write_items(TransactItems=write_item_batch)
-    print(f"##### Build failure processing for {build_pk} is complete.")
+    print(f"##### Build failure processing for [{build_id}] is complete.")

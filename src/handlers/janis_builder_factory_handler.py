@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute 
 
 from helpers.process_build_failure import process_build_failure
 import helpers.stages as stages
-from helpers.get_lambda_cloudwatch_url import get_lambda_cloudwatch_url
+from helpers.utils import get_lambda_cloudwatch_url, get_current_build_item
 
 
 def handler(event, context):
@@ -13,37 +13,31 @@ def handler(event, context):
     publisher_table = dynamodb.Table(table_name)
 
     # Get janis_branch from CodeBuild result
-    build_data = json.loads(event["Records"][0]["Sns"]['Message'])['detail']
-    for env_var in build_data['additional-information']['environment']['environment-variables']:
+    codebuild_data = json.loads(event["Records"][0]["Sns"]['Message'])['detail']
+    for env_var in codebuild_data['additional-information']['environment']['environment-variables']:
         if (env_var['name'] == 'JANIS_BRANCH'):
             janis_branch = env_var['value']
             break
 
-    # Get currently "building" BLD for janis_branch
-    build_pk = f'BLD#{janis_branch}'
-    build_item = publisher_table.get_item(
-        Key={
-            'pk': build_pk,
-            'sk': 'building',
-        },
-        ProjectionExpression='build_id',
-    )
-    if not 'Item' in build_item:
-        print(f"##### No 'building' BLD found for {build_pk}.")
+    build_item = get_current_build_item(janis_branch)
+    if not build_item:
         return None
 
     # Update the logs for that BLD
-    print(f"##### janis_builder_factory stage finished for {build_item['Item']['build_id']}")
+    build_id = build_item["build_id"]
+    build_pk = build_item["pk"]
+    build_sk = build_item["sk"]
+    print(f"##### janis_builder_factory stage finished for [{build_id}].")
     lambda_cloudwatch_url = get_lambda_cloudwatch_url(context)
-    project_name = build_data['project-name']
-    stream_name = build_data['additional-information']['logs']['stream-name']
+    project_name = codebuild_data['project-name']
+    stream_name = codebuild_data['additional-information']['logs']['stream-name']
     codebuild_url = f'https://console.aws.amazon.com/codesuite/codebuild/projects/{project_name}/build/{project_name}%3A{stream_name}/log?region={os.getenv("AWS_REGION")}'
     publisher_table.update_item(
         Key={
             'pk': build_pk,
-            'sk': 'building',
+            'sk': build_sk,
         },
-        UpdateExpression="SET logs = list_append(logs, :logs)",
+        UpdateExpression="SET logs = list_append(if_not_exists(logs, :empty_list), :logs)",
         ExpressionAttributeValues={
             ":logs": [
                 {
@@ -52,11 +46,12 @@ def handler(event, context):
                     'codebuild_url': codebuild_url,
                 }
             ],
+            ":empty_list": [],
         },
         ConditionExpression=Attr('stage').eq(stages.janis_builder_factory),
     )
 
-    build_status = build_data['build-status']
+    build_status = codebuild_data['build-status']
     if (
         (build_status == "STOPPED") or
         (build_status == "FAILED")
