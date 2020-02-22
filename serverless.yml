@@ -12,6 +12,7 @@ custom:
   dotenv:
     include:
       - DEPLOY_ENV
+  FARGATE_TASK_EXECUTION_ROLE: !Join [ ':', [ !Ref 'AWS::StackName', 'FargateTaskExecutionRole' ] ]
 
 package:
   individually: true
@@ -58,6 +59,16 @@ provider:
         - codebuild:StartBuild
       Resource:
         Fn::GetAtt: [ CodeBuildProject, Arn ]
+    - Effect: Allow
+      Action:
+        - ecs:RunTask
+        - ecs:RegisterTaskDefinition
+      Resource: '*'
+    - Effect: Allow
+      Action:
+        - iam:PassRole
+      Resource:
+        Fn::GetAtt: [ FargateTaskExecutionRole, Arn ]
 
 functions:
   queue:
@@ -73,7 +84,7 @@ functions:
           arn:
             Fn::GetAtt: [ BuildTable, StreamArn ]
           batchSize: 1
-  janisBuilderFactory:
+  janis-builder-factory:
     handler: janis_builder_factory_handler.handler
     module: src/handlers
     timeout: 60
@@ -84,6 +95,12 @@ functions:
       - sns:
           arn: !Ref CodeBuildTopic
           topicName: Fn::GetAtt [ CodeBuildTopic, TopicName ]
+    environment:
+      FARGATE_TASK_EXECUTION_ROLE:
+        Fn::GetAtt:
+          - FargateTaskExecutionRole
+          - Arn
+      JANIS_BUILDER_ECR_URI: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderEcrUri}
 
 
 resources:

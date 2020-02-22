@@ -5,6 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute 
 from helpers.process_build_failure import process_build_failure
 import helpers.stages as stages
 from helpers.utils import get_lambda_cloudwatch_url, parse_build_id
+from helpers.register_janis_builder_task import register_janis_builder_task
 
 
 def handler(event, context):
@@ -51,4 +52,14 @@ def handler(event, context):
     ):
         process_build_failure(janis_branch, context)
     elif (build_status == "SUCCEEDED"):
-        print("##### We won.")
+        publisher_table.update_item(
+            Key={
+                'pk': build_pk,
+                'sk': build_sk,
+            },
+            UpdateExpression="SET stage = :stage",
+            ExpressionAttributeValues={
+                ":stage": stages.register_janis_builder_task,
+            },
+        )
+        register_janis_builder_task(janis_branch)

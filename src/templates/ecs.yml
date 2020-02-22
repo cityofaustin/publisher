@@ -41,7 +41,7 @@ Resources:
                 - 'ec2:DetachNetworkInterface'
               Resource: '*'
   # This is a role which is used by the ECS Fargate tasks themselves.
-  ECSTaskExecutionRole:
+  FargateTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: coa-publisher-task-execution-${env:DEPLOY_ENV}
@@ -53,7 +53,7 @@ Resources:
           Action: ['sts:AssumeRole']
       Path: /
       Policies:
-        - PolicyName: AmazonECSTaskExecutionRolePolicy
+        - PolicyName: AmazonFargateTaskExecutionRolePolicy
           PolicyDocument:
             Statement:
               - Effect: Allow

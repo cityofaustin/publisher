@@ -4,3 +4,4 @@
 
 preparing_to_build = "preparing_to_build"
 janis_builder_factory = "janis_builder_factory"
+register_janis_builder_task = "register_janis_builder_task"
