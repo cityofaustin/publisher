@@ -16,4 +16,10 @@ Your logs can be found in cloudwatch under /aws/lambda/<service>-<stage>-<functi
 
 
 If you update Pipfile dependencies.
-1. `pipenv lock -r > src/handlers/requirements.txt` to update the requirements that go into the lambda function for your specific handler. Root Pipfile should still exist for dev administrative tasks (like deployment) that are distinct from lambda execution. 
+1. `pipenv lock -r > src/handlers/requirements.txt` to update the requirements that go into the lambda function for your specific handler. Root Pipfile should still exist for dev administrative tasks (like deployment) that are distinct from lambda execution.
+
+
+Passing environment variables:
+1. helpers.utils.get_janis_builder_factory_env_vars
+2. janis_builder_factory_source/buildspec.yml pass in as build-arg
+3. janis_builder_factory_source/janis-builder.Dockerfile to receive env_vars within image

@@ -63,3 +63,4 @@ def handler(event, context):
             },
         )
         register_janis_builder_task(janis_branch)
+        run_janis_builder_task(janis_branch)

@@ -35,6 +35,7 @@ function run_yarn_install {
 # $CACHE_EXISTS written to cache_exists.tmp by checkCacheExists.js
 node $D/checkCacheExists.js "$JANIS_BRANCH"
 source $D/cache_exists.tmp
+SECONDS=0
 
 # Use cached node_modules if a cache exists and the yarn.lock is unchanged.
 if [[ "$CACHE_EXISTS" == "True" ]]; then
@@ -93,3 +94,5 @@ else
   echo "#### yarn.lock changed. Re-installing node_modules."
   run_yarn_install
 fi
+duration=$SECONDS
+echo "##### Dependencies installed in $(($duration / 60)):$(($duration % 60))"

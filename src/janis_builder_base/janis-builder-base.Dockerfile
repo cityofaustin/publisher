@@ -5,6 +5,22 @@ RUN apk add --no-cache --upgrade \
   git \
   bash
 
+# Install aws-cli
+RUN apk -v --update add \
+    python \
+    py-pip \
+    groff \
+    less \
+    mailcap \
+    && \
+  pip --no-cache-dir install --upgrade awscli==1.16.248 && \
+  apk -v --purge del py-pip && \
+  rm -rf /var/cache/apk/*
+
+# Set DEPLOY_ENV
+ARG DEPLOY_ENV
+ENV DEPLOY_ENV=$DEPLOY_ENV
+
 # Create directories
 RUN mkdir src
 RUN mkdir src/cache
@@ -17,5 +33,3 @@ COPY "./scripts" ./scripts
 # Install dependencies for scripts
 COPY "./package.json" ./scripts
 RUN yarn install --cwd ./scripts
-
-# TODO: Run a build

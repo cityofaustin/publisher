@@ -80,3 +80,55 @@ def get_current_build_item(janis_branch):
 # 255 character limit
 def github_to_aws(branch_name):
     return re.sub('[^\w\d-]','-',branch_name)[:255]
+
+# Retrieve latest task definition ARN (with revision number)
+# Returns "None" is one doesn't exist
+def get_latest_task_definition(janis_branch):
+    ecs_client = boto3.client('ecs')
+
+    task_definitions = ecs_client.list_task_definitions(
+        familyPrefix=f'janis-builder-{janis_branch}',
+        sort="DESC",
+        maxResults=1,
+    )['taskDefinitionArns']
+
+    if len(task_definitions):
+        return task_definitions[0]
+    else:
+        return None
+
+
+# TODO have logic to handle prod v. staging v. review
+def get_cms_api_url(joplin):
+    return f'https://{joplin}.herokuapp.com/api/graphql'
+
+
+def get_cms_media_url(janis_branch):
+    return 'https://joplin-austin-gov-static.s3.amazonaws.com/staging/media'
+
+
+def get_deployment_mode(janis_branch):
+    return 'REVIEW'
+
+
+def get_cms_docs(janis_branch):
+    return 'multiple'
+
+def get_janis_builder_factory_env_vars(janis_branch, build_item):
+    env_vars = {
+        "JANIS_BRANCH": janis_branch,
+        "BUILD_ID": build_item["build_id"],
+        "DEPLOYMENT_MODE": get_deployment_mode(janis_branch),
+        "CMS_API": get_cms_api_url(build_item["joplin"]),
+        "CMS_MEDIA": get_cms_media_url(janis_branch),
+        "CMS_DOCS": get_cms_docs(janis_branch)
+    }
+
+    environmentVariablesOverride=[]
+    for key in env_vars:
+        environmentVariablesOverride.append({
+            "name": key,
+            "value": env_vars[key],
+            "type": "PLAINTEXT",
+        })
+    return environmentVariablesOverride

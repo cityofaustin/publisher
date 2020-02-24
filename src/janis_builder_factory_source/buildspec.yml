@@ -22,9 +22,11 @@ phases:
         --build-arg AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION"
         --build-arg AWS_CONTAINER_CREDENTIALS_RELATIVE_URI="$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
         --build-arg JANIS_BRANCH="$JANIS_BRANCH"
-        --build-arg JOPLIN_BRANCH="$JOPLIN_BRANCH"
-        --build-arg DEST="$DEST"
+        --build-arg BUILD_ID="$BUILD_ID"
+        --build-arg DEPLOYMENT_MODE="$DEPLOYMENT_MODE"
+        --build-arg CMS_API="$CMS_API"
         --build-arg CMS_MEDIA="$CMS_MEDIA"
+        --build-arg CMS_DOCS="$CMS_DOCS"
         .
   post_build:
     commands:

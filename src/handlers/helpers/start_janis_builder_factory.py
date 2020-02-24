@@ -2,7 +2,7 @@ import os, boto3
 from boto3.dynamodb.conditions import Attr
 
 import helpers.stages as stages
-from helpers.utils import parse_build_id
+from helpers.utils import parse_build_id, get_current_build_item, get_janis_builder_factory_env_vars
 
 
 def start_janis_builder_factory(build_id):
@@ -29,24 +29,9 @@ def start_janis_builder_factory(build_id):
 
     # Start CodeBuild Project
     codebuild = boto3.client('codebuild')
+    build_item = get_current_build_item(janis_branch)
     codebuild.start_build(
         projectName=f'coa-publisher-janis-builder-factory-{os.getenv("DEPLOY_ENV")}',
-        environmentVariablesOverride=[
-            {
-                "name": "JANIS_BRANCH",
-                "value": janis_branch,
-                "type": "PLAINTEXT"
-            },
-            {
-                "name": "DEST",
-                "value": "placeholder!",
-                "type": "PLAINTEXT",
-            },
-            {
-                "name": "BUILD_ID",
-                "value": build_id,
-                "type": "PLAINTEXT",
-            }
-        ],
+        environmentVariablesOverride=get_janis_builder_factory_env_vars(janis_branch, build_item),
     )
     print(f"##### Starting janis_builder_factory for [{build_id}]")
