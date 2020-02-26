@@ -28,6 +28,7 @@ provider:
   region: us-east-1
   stage: ${env:DEPLOY_ENV}
   stackName: coa-publisher-${env:DEPLOY_ENV}
+  timeout: 30
   stackTags:
     user:app: publisher
     user:env: ${env:DEPLOY_ENV}
@@ -63,18 +64,31 @@ provider:
       Action:
         - ecs:RunTask
         - ecs:RegisterTaskDefinition
+        - ecs:ListTaskDefinitions
       Resource: '*'
     - Effect: Allow
       Action:
         - iam:PassRole
       Resource:
         Fn::GetAtt: [ FargateTaskExecutionRole, Arn ]
+    - Effect: Allow
+      Action:
+        - 's3:ListBucket'
+      Resource: 'arn:aws:s3:::coa-publisher'
+    - Effect: Allow
+      Action:
+        - s3:GetBucketLocation
+        - s3:GetObject
+      Resource: 'arn:aws:s3:::coa-publisher/*'
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: "*"
 
 functions:
   queue:
     handler: queue_handler.handler
     module: src/handlers
-    timeout: 60
     package:
       include:
         - src/handlers/**
@@ -84,10 +98,12 @@ functions:
           arn:
             Fn::GetAtt: [ BuildTable, StreamArn ]
           batchSize: 1
+    environment:
+      DEPLOY_LAMBDA_ARN:
+        Fn::GetAtt: DeployLambdaFunction.Arn
   janis-builder-factory:
     handler: janis_builder_factory_handler.handler
     module: src/handlers
-    timeout: 60
     package:
       include:
         - src/handlers/**
@@ -101,7 +117,9 @@ functions:
           - FargateTaskExecutionRole
           - Arn
       JANIS_BUILDER_ECR_URI: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderEcrUri}
-
+  deploy:
+    handler: src/handlers_js/deployHandler.handler
+    runtime: nodejs12.x
 
 resources:
   - ${file(src/templates/networking.yml)}

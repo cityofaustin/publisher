@@ -33,7 +33,11 @@ echo "##### Completed react-static build in $(($duration / 60)):$(($duration % 6
 
 echo "##### Uploading to S3"
 SECONDS=0
-aws s3 sync ./dist s3://coa-publisher/builds/$DEPLOY_ENV/ --no-progress --delete
+zipped_site="janis#$JANIS_BRANCH.zip"
+zip -rq $zipped_site ./dist/*
+aws s3 cp ./$zipped_site s3://coa-publisher/builds/$DEPLOY_ENV/$zipped_site --no-progress
+# TODO: for production and staging
+# aws s3 sync ./dist s3://coa-publisher/builds/$DEPLOY_ENV/$JANIS_BRANCH --no-progress --delete
 duration=$SECONDS
 echo "##### Completed upload to S3 in $(($duration / 60)):$(($duration % 60))"
 

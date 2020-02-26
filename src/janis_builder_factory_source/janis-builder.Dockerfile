@@ -24,5 +24,5 @@ ENV CMS_DOCS=$CMS_DOCS
 RUN git clone -b "$JANIS_BRANCH" --single-branch https://github.com/cityofaustin/janis
 RUN ./scripts/install_yarn_dependencies.sh
 
-# Run your publish command
-RUN ./scripts/publish.sh
+# Run your build_site command
+RUN ./scripts/build_site.sh

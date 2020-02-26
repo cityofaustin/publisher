@@ -1,7 +1,6 @@
 import os, boto3
 
-# After you've created your janis_builder image
-# you must register it as a Fargate task.
+# After you've created your janis_builder image, you must register it as a Fargate task.
 # Then you can execute that task in order to run your janis_builder container.
 def register_janis_builder_task(janis_branch):
     ecs_client = boto3.client('ecs')

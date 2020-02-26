@@ -1,8 +1,8 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute import of "helpers" as a module
 
-from helpers.process_new_build import process_new_build
-from helpers.process_new_request import process_new_request
+from commands.process_new_build import process_new_build
+from commands.process_new_request import process_new_request
 
 
 def handler(event, context):

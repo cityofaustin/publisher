@@ -2,10 +2,11 @@ import os, boto3, json, sys
 from boto3.dynamodb.conditions import Attr
 sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute import of "helpers" as a module
 
-from helpers.process_build_failure import process_build_failure
+from commands.process_build_failure import process_build_failure
+from commands.register_janis_builder_task import register_janis_builder_task
+from commands.deploy_janis import deploy_janis
 import helpers.stages as stages
 from helpers.utils import get_lambda_cloudwatch_url, parse_build_id
-from helpers.register_janis_builder_task import register_janis_builder_task
 
 
 def handler(event, context):
@@ -63,4 +64,4 @@ def handler(event, context):
             },
         )
         register_janis_builder_task(janis_branch)
-        run_janis_builder_task(janis_branch)
+        deploy_janis(janis_branch)

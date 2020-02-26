@@ -1,4 +1,4 @@
-import os, boto3, re
+import os, boto3, re, io
 from datetime import datetime
 from pytz import timezone
 
@@ -114,6 +114,7 @@ def get_deployment_mode(janis_branch):
 def get_cms_docs(janis_branch):
     return 'multiple'
 
+
 def get_janis_builder_factory_env_vars(janis_branch, build_item):
     env_vars = {
         "JANIS_BRANCH": janis_branch,
@@ -132,3 +133,15 @@ def get_janis_builder_factory_env_vars(janis_branch, build_item):
             "type": "PLAINTEXT",
         })
     return environmentVariablesOverride
+
+
+def get_zipped_janis_build(janis_branch):
+    s3 = boto3.client('s3')
+    bytes_buffer = io.BytesIO()
+    s3.download_fileobj(
+        Bucket='coa-publisher',
+        Key=f'builds/{os.getenv("DEPLOY_ENV")}/janis#{janis_branch}.zip',
+        Fileobj=bytes_buffer
+    )
+    data_binary = bytes_buffer.getvalue()
+    return data_binary

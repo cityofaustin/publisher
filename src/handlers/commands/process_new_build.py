@@ -1,6 +1,8 @@
 from helpers.utils import get_current_build_item, get_latest_task_definition
 import helpers.stages as stages
-from helpers.start_janis_builder_factory import start_janis_builder_factory
+from commands.start_janis_builder_factory import start_janis_builder_factory
+from commands.run_janis_builder_task import run_janis_builder_task
+from commands.invoke_deploy_lambda import invoke_deploy_lambda
 
 
 def process_new_build(janis_branch, context):
@@ -23,6 +25,10 @@ def process_new_build(janis_branch, context):
     if build_type == "rebuild":
         start_janis_builder_factory(build_id)
     else:
+        ###### Temp for testing
+        invoke_deploy_lambda(janis_branch)
+        return None
+        ######
         # If a janis_builder task_definition exists for your janis_branch, then run it
         if get_latest_task_definition(janis_branch):
             run_janis_builder_task(janis_branch)

@@ -3,7 +3,8 @@ FROM node:12.14.1-alpine3.11
 # Install other dependencies
 RUN apk add --no-cache --upgrade \
   git \
-  bash
+  bash \
+  zip
 
 # Install aws-cli
 RUN apk -v --update add \
