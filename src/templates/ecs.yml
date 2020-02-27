@@ -40,17 +40,20 @@ Resources:
                 - 'ec2:Describe*'
                 - 'ec2:DetachNetworkInterface'
               Resource: '*'
-  # This is a role which is used by the ECS Fargate tasks themselves.
-  FargateTaskExecutionRole:
+
+  # Executes ECS actions https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html
+  JanisBuilderTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: coa-publisher-task-execution-${env:DEPLOY_ENV}
+      RoleName: coa-publisher-janis-builder-task-execution-${env:DEPLOY_ENV}
       AssumeRolePolicyDocument:
         Statement:
         - Effect: Allow
           Principal:
-            Service: [ecs-tasks.amazonaws.com]
-          Action: ['sts:AssumeRole']
+            Service:
+              - ecs-tasks.amazonaws.com
+          Action:
+            - sts:AssumeRole
       Path: /
       Policies:
         - PolicyName: AmazonFargateTaskExecutionRolePolicy
@@ -64,6 +67,33 @@ Resources:
                 Resource: '*'
               - Effect: Allow
                 Action:
+                  # get permission to pull janis_builder_base image from ECR
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                  - "ecr:BatchCheckLayerAvailability"
+                Resource: '*'
+
+  # The Role used by processes within the Fargate janis_builder task itself
+  JanisBuilderRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: coa-publisher-janis-builder-${env:DEPLOY_ENV}
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - ecs-tasks.amazonaws.com
+          Action:
+            - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: AmazonFargateTaskRolePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
                   - 's3:ListBucket'
                 Resource: 'arn:aws:s3:::coa-publisher'
               - Effect: Allow
@@ -74,11 +104,3 @@ Resources:
                   - 's3:DeleteObject'
                   - 's3:PutObject'
                 Resource: 'arn:aws:s3:::coa-publisher/*'
-              - Effect: Allow
-                Action:
-                  # get permission to pull janis_builder_base image from ECR
-                  - "ecr:GetAuthorizationToken"
-                  - "ecr:GetDownloadUrlForLayer"
-                  - "ecr:BatchGetImage"
-                  - "ecr:BatchCheckLayerAvailability"
-                Resource: '*'

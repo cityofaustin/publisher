@@ -54,8 +54,6 @@ def run_janis_builder_task(janis_branch, build_item, latest_task_definition):
         },
     )
 
-    print(task)
-
     # Update the logs for your BLD
     task_id = (task['tasks'][0]['taskArn']).split('task/')[1]
     publisher_table.update_item(

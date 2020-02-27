@@ -31,7 +31,8 @@ def register_janis_builder_task(janis_branch):
        ],
        cpu="1024",
        memory="2048",
-       executionRoleArn=os.getenv("FARGATE_TASK_EXECUTION_ROLE"),
+       executionRoleArn=os.getenv("JANIS_BUILDER_TASK_EXECUTION_ROLE"),
+       taskRoleArn=os.getenv("JANIS_BUILDER_ROLE"),
        family=f'janis-builder-{janis_branch}',
        networkMode="awsvpc",
        requiresCompatibilities=[

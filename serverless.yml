@@ -12,7 +12,6 @@ custom:
   dotenv:
     include:
       - DEPLOY_ENV
-  FARGATE_TASK_EXECUTION_ROLE: !Join [ ':', [ !Ref 'AWS::StackName', 'FargateTaskExecutionRole' ] ]
 
 package:
   individually: true
@@ -70,7 +69,8 @@ provider:
       Action:
         - iam:PassRole
       Resource:
-        Fn::GetAtt: [ FargateTaskExecutionRole, Arn ]
+        - Fn::GetAtt: [ JanisBuilderTaskExecutionRole, Arn ]
+        - Fn::GetAtt: [ JanisBuilderRole, Arn ]
     - Effect: Allow
       Action:
         - 's3:ListBucket'
@@ -110,9 +110,13 @@ functions:
           arn: !Ref CodeBuildTopic
           topicName: Fn::GetAtt [ CodeBuildTopic, TopicName ]
     environment:
-      FARGATE_TASK_EXECUTION_ROLE:
+      JANIS_BUILDER_TASK_EXECUTION_ROLE:
         Fn::GetAtt:
-          - FargateTaskExecutionRole
+          - JanisBuilderTaskExecutionRole
+          - Arn
+      JANIS_BUILDER_ROLE:
+        Fn::GetAtt:
+          - JanisBuilderRole
           - Arn
       JANIS_BUILDER_ECR_URI: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderEcrUri}
 
