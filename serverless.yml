@@ -80,10 +80,6 @@ provider:
         - s3:GetBucketLocation
         - s3:GetObject
       Resource: 'arn:aws:s3:::coa-publisher/*'
-    - Effect: Allow
-      Action:
-        - lambda:InvokeFunction
-      Resource: "*"
 
 functions:
   queue:
@@ -98,6 +94,11 @@ functions:
           arn:
             Fn::GetAtt: [ BuildTable, StreamArn ]
           batchSize: 1
+    environment:
+      ECS_CLUSTER: !Ref ECSCluster
+      PUBLIC_SUBNET_ONE: !Ref PublicSubnetOne
+      PUBLIC_SUBNET_TWO: !Ref PublicSubnetTwo
+      CLUSTER_SECURITY_GROUP: !Ref ClusterSecurityGroup
   janis-builder-factory:
     handler: janis_builder_factory_handler.handler
     module: src/handlers

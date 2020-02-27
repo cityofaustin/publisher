@@ -81,6 +81,7 @@ def get_current_build_item(janis_branch):
 def github_to_aws(branch_name):
     return re.sub('[^\w\d-]','-',branch_name)[:255]
 
+
 # Retrieve latest task definition ARN (with revision number)
 # Returns "None" is one doesn't exist
 def get_latest_task_definition(janis_branch):
@@ -150,3 +151,9 @@ def get_zipped_janis_build(janis_branch):
     )
     data_binary = bytes_buffer.getvalue()
     return data_binary
+
+
+def get_janis_branch(build_id):
+    build_pk, build_sk = parse_build_id(build_id)
+    janis_branch = build_pk.split('#')[1]
+    return janis_branch

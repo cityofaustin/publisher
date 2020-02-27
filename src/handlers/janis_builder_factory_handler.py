@@ -4,8 +4,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute 
 
 from commands.process_build_failure import process_build_failure
 from commands.register_janis_builder_task import register_janis_builder_task
+from commands.process_build_success import process_build_success
+from commands.process_build_failure import process_build_failure
 import helpers.stages as stages
-from helpers.utils import get_lambda_cloudwatch_url, parse_build_id
+from helpers.utils import get_lambda_cloudwatch_url, parse_build_id, get_janis_branch
 
 
 def handler(event, context):
@@ -19,47 +21,53 @@ def handler(event, context):
             build_id = env_var['value']
             break
     print(f"##### janis_builder_factory stage finished for [{build_id}].")
-    # Update the logs for that BLD
-    build_pk, build_sk = parse_build_id(build_id)
-    janis_branch = build_pk.split("#")[1]
-    lambda_cloudwatch_url = get_lambda_cloudwatch_url(context)
-    project_name = codebuild_data['project-name']
-    stream_name = codebuild_data['additional-information']['logs']['stream-name']
-    codebuild_url = f'https://console.aws.amazon.com/codesuite/codebuild/projects/{project_name}/build/{project_name}%3A{stream_name}/log?region={os.getenv("AWS_REGION")}'
-    publisher_table.update_item(
-        Key={
-            'pk': build_pk,
-            'sk': build_sk,
-        },
-        UpdateExpression="SET logs = list_append(if_not_exists(logs, :empty_list), :logs)",
-        ExpressionAttributeValues={
-            ":logs": [
-                {
-                    'stage': stages.janis_builder_factory,
-                    'lambda_url': lambda_cloudwatch_url,
-                    'codebuild_url': codebuild_url,
-                }
-            ],
-            ":empty_list": [],
-        },
-        ConditionExpression=Attr('stage').eq(stages.janis_builder_factory),
-    )
-
-    build_status = codebuild_data['build-status']
-    if (
-        (build_status == "STOPPED") or
-        (build_status == "FAILED")
-    ):
-        process_build_failure(janis_branch, context)
-    elif (build_status == "SUCCEEDED"):
+    try:
+        # Update the logs for that BLD
+        build_pk, build_sk = parse_build_id(build_id)
+        janis_branch = get_janis_branch(build_id)
+        lambda_cloudwatch_url = get_lambda_cloudwatch_url(context)
+        project_name = codebuild_data['project-name']
+        stream_name = codebuild_data['additional-information']['logs']['stream-name']
+        codebuild_url = f'https://console.aws.amazon.com/codesuite/codebuild/projects/{project_name}/build/{project_name}%3A{stream_name}/log?region={os.getenv("AWS_REGION")}'
         publisher_table.update_item(
             Key={
                 'pk': build_pk,
                 'sk': build_sk,
             },
-            UpdateExpression="SET stage = :stage",
+            UpdateExpression="SET logs = list_append(if_not_exists(logs, :empty_list), :logs)",
             ExpressionAttributeValues={
-                ":stage": stages.register_janis_builder_task,
+                ":logs": [
+                    {
+                        'stage': stages.janis_builder_factory,
+                        'lambda_url': lambda_cloudwatch_url,
+                        'codebuild_url': codebuild_url,
+                    }
+                ],
+                ":empty_list": [],
             },
+            ConditionExpression=Attr('stage').eq(stages.janis_builder_factory),
         )
-        register_janis_builder_task(janis_branch)
+
+        build_status = codebuild_data['build-status']
+        if (
+            (build_status == "STOPPED") or
+            (build_status == "FAILED")
+        ):
+            process_build_failure(janis_branch, context)
+        elif (build_status == "SUCCEEDED"):
+            publisher_table.update_item(
+                Key={
+                    'pk': build_pk,
+                    'sk': build_sk,
+                },
+                UpdateExpression="SET stage = :stage",
+                ExpressionAttributeValues={
+                    ":stage": stages.register_janis_builder_task,
+                },
+            )
+            register_janis_builder_task(janis_branch)
+            process_build_success(janis_branch, context)
+    except Exception as error:
+        print(error)
+        janis_branch = get_janis_branch(build_id)
+        process_build_failure(janis_branch, context)

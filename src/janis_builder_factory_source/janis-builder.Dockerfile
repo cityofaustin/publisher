@@ -30,5 +30,9 @@ ENV NETLIFY_SITE_NAME=$NETLIFY_SITE_NAME
 RUN git clone -b "$JANIS_BRANCH" --single-branch https://github.com/cityofaustin/janis
 RUN ./scripts/install_yarn_dependencies.sh
 
-# Run your build_site command
+# Run initial build_site command
+ENV BUILD_TYPE="rebuild"
 RUN ./scripts/build_site.sh
+
+# Set Entrypoint to build_site.sh for future Fargate invocations
+ENTRYPOINT ["./scripts/build_site.sh"]

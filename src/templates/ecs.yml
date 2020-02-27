@@ -64,6 +64,10 @@ Resources:
                 Resource: '*'
               - Effect: Allow
                 Action:
+                  - 's3:ListBucket'
+                Resource: 'arn:aws:s3:::coa-publisher'
+              - Effect: Allow
+                Action:
                   # allow GET/PUT for objects in coa-publisher-codebuild s3 bucket
                   - 's3:GetBucketLocation'
                   - 's3:GetObject'
