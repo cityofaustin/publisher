@@ -1,5 +1,11 @@
 version: 0.2
 
+env:
+  # These values are stored in the AWS System Manager Parameter Store
+  # https://console.aws.amazon.com/systems-manager/parameters/?region=us-east-1
+  parameter-store:
+    NETLIFY_AUTH_TOKEN: "coa_publisher_netlify_auth_token"
+
 phases:
   install:
     runtime-versions:
@@ -21,12 +27,14 @@ phases:
         --build-arg VERSION="$DEPLOY_ENV-latest"
         --build-arg AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION"
         --build-arg AWS_CONTAINER_CREDENTIALS_RELATIVE_URI="$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
+        --build-arg NETLIFY_AUTH_TOKEN="$NETLIFY_AUTH_TOKEN"
         --build-arg JANIS_BRANCH="$JANIS_BRANCH"
         --build-arg BUILD_ID="$BUILD_ID"
         --build-arg DEPLOYMENT_MODE="$DEPLOYMENT_MODE"
         --build-arg CMS_API="$CMS_API"
         --build-arg CMS_MEDIA="$CMS_MEDIA"
         --build-arg CMS_DOCS="$CMS_DOCS"
+        --build-arg NETLIFY_SITE_NAME="$NETLIFY_SITE_NAME"
         .
   post_build:
     commands:

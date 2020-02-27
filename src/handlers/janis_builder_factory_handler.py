@@ -4,7 +4,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute 
 
 from commands.process_build_failure import process_build_failure
 from commands.register_janis_builder_task import register_janis_builder_task
-from commands.deploy_janis import deploy_janis
 import helpers.stages as stages
 from helpers.utils import get_lambda_cloudwatch_url, parse_build_id
 
@@ -64,4 +63,3 @@ def handler(event, context):
             },
         )
         register_janis_builder_task(janis_branch)
-        deploy_janis(janis_branch)

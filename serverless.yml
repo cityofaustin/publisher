@@ -98,9 +98,6 @@ functions:
           arn:
             Fn::GetAtt: [ BuildTable, StreamArn ]
           batchSize: 1
-    environment:
-      DEPLOY_LAMBDA_ARN:
-        Fn::GetAtt: DeployLambdaFunction.Arn
   janis-builder-factory:
     handler: janis_builder_factory_handler.handler
     module: src/handlers
@@ -117,9 +114,6 @@ functions:
           - FargateTaskExecutionRole
           - Arn
       JANIS_BUILDER_ECR_URI: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderEcrUri}
-  deploy:
-    handler: src/handlers_js/deployHandler.handler
-    runtime: nodejs12.x
 
 resources:
   - ${file(src/templates/networking.yml)}

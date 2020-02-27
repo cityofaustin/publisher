@@ -115,6 +115,10 @@ def get_cms_docs(janis_branch):
     return 'multiple'
 
 
+def get_netlify_site_name(janis_branch):
+    return f'coa-pub-v2-{janis_branch.lower()}'
+
+
 def get_janis_builder_factory_env_vars(janis_branch, build_item):
     env_vars = {
         "JANIS_BRANCH": janis_branch,
@@ -122,7 +126,8 @@ def get_janis_builder_factory_env_vars(janis_branch, build_item):
         "DEPLOYMENT_MODE": get_deployment_mode(janis_branch),
         "CMS_API": get_cms_api_url(build_item["joplin"]),
         "CMS_MEDIA": get_cms_media_url(janis_branch),
-        "CMS_DOCS": get_cms_docs(janis_branch)
+        "CMS_DOCS": get_cms_docs(janis_branch),
+        "NETLIFY_SITE_NAME": get_netlify_site_name(janis_branch),
     }
 
     environmentVariablesOverride=[]

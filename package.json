@@ -2,5 +2,8 @@
   "devDependencies": {
     "serverless-dotenv-plugin": "^2.3.2",
     "serverless-python-requirements": "^5.0.1"
+  },
+  "dependencies": {
+    "npm-run-all": "^4.1.5"
   }
 }

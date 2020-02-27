@@ -23,7 +23,8 @@ async function checkCacheExists(janisBranch){
       console.log("CACHE_EXISTS=False")
       cacheExists = "False";
     } else {
-      throw e
+      console.log(e)
+      process.exit(1)
     }
   }
   fs.writeFileSync(`${__dirname}/cache_exists.tmp`,`CACHE_EXISTS=${cacheExists}`)
