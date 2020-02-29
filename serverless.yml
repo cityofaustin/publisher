@@ -119,6 +119,16 @@ functions:
           - JanisBuilderRole
           - Arn
       JANIS_BUILDER_ECR_URI: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderEcrUri}
+  janis-builder:
+    handler: janis_builder_handler.handler
+    module: src/handlers
+    package:
+      include:
+        - src/handlers/**
+    events:
+      - sns:
+          arn: !Ref JanisBuilderTopic
+          topicName: Fn::GetAtt [ JanisBuilderTopic, TopicName ]
 
 resources:
   - ${file(src/templates/networking.yml)}

@@ -104,3 +104,40 @@ Resources:
                   - 's3:DeleteObject'
                   - 's3:PutObject'
                 Resource: 'arn:aws:s3:::coa-publisher/*'
+
+  JanisBuilderTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: coa-publisher-janis-builder-${env:DEPLOY_ENV}
+
+  JanisBuilderTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref JanisBuilderTopic
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 'events.amazonaws.com'
+            Action: sns:Publish
+            Resource: !Ref JanisBuilderTopic
+
+  JanisBuilderCloudWatchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - "aws.fargate"
+          # - "aws.ecs"
+        detail-type:
+          - "ECS Task State Change"
+        detail:
+          lastStatus:
+            - STOPPED
+          project-name:
+            - !Ref JanisBuilderTopicPolicy
+      State: ENABLED
+      Targets:
+        - Arn: !Ref JanisBuilderTopic
+          Id: JanisBuilderTopic
