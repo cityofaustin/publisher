@@ -88,6 +88,7 @@ def get_latest_task_definition(janis_branch):
     ecs_client = boto3.client('ecs')
 
     task_definitions = ecs_client.list_task_definitions(
+        # family is set in register_janis_builder_task()
         familyPrefix=f'janis-builder-{janis_branch}',
         sort="DESC",
         maxResults=1,

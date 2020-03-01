@@ -129,6 +129,8 @@ functions:
       - sns:
           arn: !Ref JanisBuilderTopic
           topicName: Fn::GetAtt [ JanisBuilderTopic, TopicName ]
+    environment:
+      JANIS_BUILDER_FAMILY: janis-builder-${env:DEPLOY_ENV}
 
 resources:
   - ${file(src/templates/networking.yml)}

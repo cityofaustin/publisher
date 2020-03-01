@@ -128,15 +128,15 @@ Resources:
     Properties:
       EventPattern:
         source:
-          - "aws.fargate"
-          # - "aws.ecs"
+          - "aws.ecs"
         detail-type:
           - "ECS Task State Change"
         detail:
+          # We only want to listen for tasks in this ECS Cluster
+          clusterArn:
+            - Fn::GetAtt: [ ECSCluster, Arn ]
           lastStatus:
             - STOPPED
-          project-name:
-            - !Ref JanisBuilderTopicPolicy
       State: ENABLED
       Targets:
         - Arn: !Ref JanisBuilderTopic

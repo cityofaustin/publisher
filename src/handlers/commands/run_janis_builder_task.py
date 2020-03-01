@@ -47,6 +47,10 @@ def run_janis_builder_task(janis_branch, build_item, latest_task_definition):
                         {
                             'name': 'PAGE_IDS',
                             'value': json.dumps([str(page_id) for page_id in build_item["page_ids"]]),
+                        },
+                        {
+                            'name': 'BUILD_ID',
+                            'value': build_item["build_id"],
                         }
                     ]
                 }

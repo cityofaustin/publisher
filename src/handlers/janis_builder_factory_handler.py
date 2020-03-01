@@ -15,8 +15,8 @@ def handler(event, context):
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
 
-    codebuild_data = json.loads(event["Records"][0]["Sns"]['Message'])['detail']
-    for env_var in codebuild_data['additional-information']['environment']['environment-variables']:
+    sns_detail = json.loads(event["Records"][0]["Sns"]['Message'])['detail']
+    for env_var in sns_detail['additional-information']['environment']['environment-variables']:
         if (env_var['name'] == 'BUILD_ID'):
             build_id = env_var['value']
             break
@@ -26,33 +26,37 @@ def handler(event, context):
         build_pk, build_sk = parse_build_id(build_id)
         janis_branch = get_janis_branch(build_id)
         lambda_cloudwatch_url = get_lambda_cloudwatch_url(context)
-        project_name = codebuild_data['project-name']
-        stream_name = codebuild_data['additional-information']['logs']['stream-name']
+        project_name = sns_detail['project-name']
+        stream_name = sns_detail['additional-information']['logs']['stream-name']
         codebuild_url = f'https://console.aws.amazon.com/codesuite/codebuild/projects/{project_name}/build/{project_name}%3A{stream_name}/log?region={os.getenv("AWS_REGION")}'
         publisher_table.update_item(
             Key={
                 'pk': build_pk,
                 'sk': build_sk,
             },
-            UpdateExpression="SET logs = list_append(if_not_exists(logs, :empty_list), :logs)",
+            UpdateExpression="SET stage = :stage, logs = list_append(if_not_exists(logs, :empty_list), :logs)",
             ExpressionAttributeValues={
+                ":stage": stages.final,
                 ":logs": [
                     {
                         'stage': stages.janis_builder_factory,
-                        'lambda_url': lambda_cloudwatch_url,
-                        'codebuild_url': codebuild_url,
+                        'url': codebuild_url,
+                    },
+                    {
+                        'stage': stages.final,
+                        'url': lambda_cloudwatch_url,
                     }
                 ],
                 ":empty_list": [],
             },
-            ConditionExpression=Attr('stage').eq(stages.janis_builder_factory),
         )
 
-        build_status = codebuild_data['build-status']
+        build_status = sns_detail['build-status']
         if (
             (build_status == "STOPPED") or
             (build_status == "FAILED")
         ):
+            print(f"##### Failure: janis_builder_factory did not succeed for [{build_id}].")
             process_build_failure(janis_branch, context)
         elif (build_status == "SUCCEEDED"):
             publisher_table.update_item(

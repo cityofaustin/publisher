@@ -34,7 +34,7 @@ def register_janis_builder_task(janis_branch):
        executionRoleArn=os.getenv("JANIS_BUILDER_TASK_EXECUTION_ROLE"),
        taskRoleArn=os.getenv("JANIS_BUILDER_ROLE"),
        family=f'janis-builder-{janis_branch}',
-       networkMode="awsvpc",
+       networkMode="awsvpc", # required for Fargate launch types
        requiresCompatibilities=[
            "FARGATE"
        ]
