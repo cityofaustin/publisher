@@ -36,6 +36,29 @@ def parse_build_id(build_id):
     return (build_pk, build_sk)
 
 
+def get_janis_branch(build_id):
+    return build_id.split("#")[1]
+
+
+# Returns build_item for a build_id
+def get_build_item(build_id):
+    dynamodb = boto3.resource('dynamodb')
+    table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
+    publisher_table = dynamodb.Table(table_name)
+
+    build_pk, build_sk = parse_build_id(build_id)
+    build = publisher_table.get_item(
+        Key={
+            'pk': build_pk,
+            'sk': build_sk,
+        },
+    )
+    if (not 'Item' in build):
+        raise PublisherDynamoError(f'#### BLD [{build_id}] does not exist.')
+
+    return build['Item']
+
+
 # Get data for the BLD that's currently runnning for a janis_branch
 # Returns None if there isn't a CURRENT_BLD build_id set
 def get_current_build_item(janis_branch):
@@ -62,17 +85,7 @@ def get_current_build_item(janis_branch):
 
     # Get the BLD item for your CURRENT_BLD
     build_id = current_build_item['Item']['build_id']
-    build_pk, build_sk = parse_build_id(build_id)
-    build = publisher_table.get_item(
-        Key={
-            'pk': build_pk,
-            'sk': build_sk,
-        },
-    )
-    if (not 'Item' in build):
-        raise PublisherDynamoError(f'CURRENT_BLD for [{build_id}] does not have a corresponding BLD item.')
-
-    return build['Item']
+    return get_build_item(build_id)
 
 
 # Convert github branch_name to a legal name for an aws container
@@ -121,7 +134,8 @@ def get_netlify_site_name(janis_branch):
     return f'coa-pub-v2-{janis_branch.lower()}'
 
 
-def get_janis_builder_factory_env_vars(janis_branch, build_item):
+def get_janis_builder_factory_env_vars(build_item):
+    janis_branch = get_janis_branch(build_item["build_id"])
     env_vars = {
         "JANIS_BRANCH": janis_branch,
         "BUILD_ID": build_item["build_id"],

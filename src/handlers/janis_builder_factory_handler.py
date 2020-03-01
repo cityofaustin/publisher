@@ -20,11 +20,11 @@ def handler(event, context):
         if (env_var['name'] == 'BUILD_ID'):
             build_id = env_var['value']
             break
+    build_pk, build_sk = parse_build_id(build_id)
+    janis_branch = get_janis_branch(build_id)
     print(f"##### janis_builder_factory stage finished for [{build_id}].")
     try:
         # Update the logs for that BLD
-        build_pk, build_sk = parse_build_id(build_id)
-        janis_branch = get_janis_branch(build_id)
         lambda_cloudwatch_url = get_lambda_cloudwatch_url(context)
         project_name = sns_detail['project-name']
         stream_name = sns_detail['additional-information']['logs']['stream-name']
@@ -57,7 +57,7 @@ def handler(event, context):
             (build_status == "FAILED")
         ):
             print(f"##### Failure: janis_builder_factory did not succeed for [{build_id}].")
-            process_build_failure(janis_branch, context)
+            process_build_failure(build_id, context)
         elif (build_status == "SUCCEEDED"):
             publisher_table.update_item(
                 Key={
@@ -70,8 +70,7 @@ def handler(event, context):
                 },
             )
             register_janis_builder_task(janis_branch)
-            process_build_success(janis_branch, context)
+            process_build_success(build_id, context)
     except Exception as error:
         print(error)
-        janis_branch = get_janis_branch(build_id)
-        process_build_failure(janis_branch, context)
+        process_build_failure(build_id, context)

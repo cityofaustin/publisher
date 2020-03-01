@@ -1,20 +1,20 @@
 import os, boto3, json
 import dateutil.parser
 
-from helpers.utils import get_datetime, get_current_build_item
+from commands.start_new_build import start_new_build
+from helpers.utils import get_datetime, get_build_item, get_janis_branch
 
-
-def process_build_success(janis_branch, context):
+def process_build_success(build_id, context):
     client = boto3.client('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     timestamp = get_datetime()
 
-    build_item = get_current_build_item(janis_branch)
-    if not build_item:
-        print(f'##### Successful build for [{janis_branch}] has already been handled')
+    build_item = get_build_item(build_id)
+    janis_branch = get_janis_branch(build_id)
+    if build_item["status"] != "building":
+        print(f'##### Successful build for [{build_id}] has already been handled')
         return None
 
-    build_id = build_item["build_id"]
     build_pk = build_item["pk"]
     build_sk = build_item["sk"]
     start_build_time = dateutil.parser.parse(build_item["sk"])
@@ -57,3 +57,4 @@ def process_build_success(janis_branch, context):
     write_item_batch.append(updated_build_item)
     client.transact_write_items(TransactItems=write_item_batch)
     print(f'##### Successful build for [{build_id}] complete.')
+    start_new_build(janis_branch, context)

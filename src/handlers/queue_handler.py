@@ -1,15 +1,15 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute import of "helpers" as a module
 
+from commands.start_new_build import start_new_build
 from commands.process_new_build import process_new_build
-from commands.process_new_request import process_new_request
 
 
 def handler(event, context):
     for record in event['Records']:
+        print(record)
         event_name = record['eventName']
-        new_item = record['dynamodb']['Keys']
-        pk = new_item["pk"]["S"]
+        pk = record['dynamodb']['Keys']["pk"]["S"]
 
         # If we got a new request, see if we can start a build
         # pk = "REQ#[janis_branch]#[timestamp]"
@@ -17,13 +17,14 @@ def handler(event, context):
             (event_name == "INSERT") and
             (pk.startswith("REQ"))
         ):
-            janis_branch = new_item["pk"]["S"].split("#")[1]
-            process_new_request(janis_branch, context)
+            janis_branch = pk.split("#")[1]
+            print("##### New publish request submitted.")
+            start_new_build(janis_branch, context)
         # If we get a new BLD, then start the build process
         # pk = "BLD#[janis_branch]#[timestamp]"
         elif (
             (event_name == "INSERT") and
             (pk.startswith("BLD"))
         ):
-            janis_branch = new_item["pk"]['S'].split("#")[1]
-            process_new_build(janis_branch, context)
+            build_id = record["dynamodb"]["NewImage"]["build_id"]["S"]
+            process_new_build(build_id, context)

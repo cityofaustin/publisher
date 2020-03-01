@@ -11,7 +11,7 @@ def register_janis_builder_task(janis_branch):
     # Register task definition for ECS to launch janis-builder:$JANIS_BRANCH containers
     print(f'##### janis-builder-factory successful. We now have a new janis-builder image for [{janis_branch}]')
     print(f"##### Now registering the Fargate task for [janis-builder-{janis_branch}]")
-    register_res = ecs_client.register_task_definition(
+    ecs_client.register_task_definition(
        containerDefinitions=[
           {
              "image": janis_builder_image,

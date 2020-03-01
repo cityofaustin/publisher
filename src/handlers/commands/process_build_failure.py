@@ -1,24 +1,29 @@
 import os, boto3, json
+import dateutil.parser
 from boto3.dynamodb.conditions import Key
 
-from helpers.utils import get_datetime, get_current_build_item
+from helpers.utils import get_datetime, get_build_item, get_janis_branch
 
 
-def process_build_failure(janis_branch, context):
+def process_build_failure(build_id, context):
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
     timestamp = get_datetime()
 
-    build_item = get_current_build_item(janis_branch)
-    if not build_item:
-        print(f"##### Failed build for [{janis_branch}] has already been handled")
+    build_item = get_build_item(build_id)
+    if build_item["status"] != "building":
+        print(f"##### Failed build for [{build_id}] has already been handled")
         return None
 
-    build_id = build_item["build_id"]
+    janis_branch = get_janis_branch(build_id)
     build_pk = build_item["pk"]
     build_sk = build_item["sk"]
+    start_build_time = dateutil.parser.parse(build_item["sk"])
+    end_build_time = dateutil.parser.parse(timestamp)
+    total_build_time = str(end_build_time - start_build_time)
+
     req_pk = f'REQ#{janis_branch}'
     print(f"##### Build for [{build_id}] failed.")
     assinged_reqs = publisher_table.query(
@@ -52,9 +57,10 @@ def process_build_failure(janis_branch, context):
                 "pk": {'S': build_pk},
                 "sk": {'S': build_sk},
             },
-            "UpdateExpression": "SET #s = :status",
+            "UpdateExpression": "SET #s = :status, total_build_time = :total_build_time",
             "ExpressionAttributeValues": {
                 ":status": {'S': f'failed#{timestamp}'},
+                ":total_build_time": {'S': total_build_time},
             },
             "ExpressionAttributeNames": { "#s": "status" },
             "ReturnValuesOnConditionCheckFailure": "ALL_OLD",

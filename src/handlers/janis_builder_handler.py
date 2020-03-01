@@ -45,10 +45,10 @@ def handler(event, context):
 
         exit_code = sns_detail["containers"][0]["exitCode"]
         if exit_code == 0:
-            process_build_success(janis_branch, context)
+            process_build_success(build_id, context)
         else:
             print(f"##### Failure: janis_builder exited with nonzero exit code for [{build_id}].")
-            process_build_failure(janis_branch, context)
+            process_build_failure(build_id, context)
     except Exception as error:
         print(error)
-        process_build_failure(janis_branch, context)
+        process_build_failure(build_id, context)

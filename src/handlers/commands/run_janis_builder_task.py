@@ -1,18 +1,20 @@
 import os, boto3, json
 
-from helpers.utils import get_cms_api_url, parse_build_id
+from helpers.utils import get_cms_api_url, parse_build_id, get_janis_branch
 import helpers.stages as stages
 
 
-def run_janis_builder_task(janis_branch, build_item, latest_task_definition):
+def run_janis_builder_task(build_item, latest_task_definition):
     ecs_client = boto3.client('ecs')
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     publisher_table = dynamodb.Table(table_name)
-    build_pk, build_sk = parse_build_id(build_item['build_id'])
+    build_id = build_item['build_id']
+    build_pk, build_sk = parse_build_id(build_id)
+    janis_branch = get_janis_branch(build_id)
 
     # Start the Task
-    print(f'##### Running janis_builder task for [{build_item["build_id"]}]')
+    print(f'##### Running janis_builder task for [{build_id}]')
     task = ecs_client.run_task(
         cluster=os.getenv("ECS_CLUSTER"),
         taskDefinition=latest_task_definition,
@@ -50,7 +52,7 @@ def run_janis_builder_task(janis_branch, build_item, latest_task_definition):
                         },
                         {
                             'name': 'BUILD_ID',
-                            'value': build_item["build_id"],
+                            'value': build_id,
                         }
                     ]
                 }
