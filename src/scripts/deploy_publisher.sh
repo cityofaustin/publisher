@@ -13,4 +13,4 @@ trap clean_up EXIT
 SLS_D=$D/../..
 cd $SLS_D
 
-sls deploy
+sls deploy --conceal $@

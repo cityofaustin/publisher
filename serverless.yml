@@ -80,6 +80,13 @@ provider:
         - s3:GetBucketLocation
         - s3:GetObject
       Resource: 'arn:aws:s3:::coa-publisher/*'
+  apiKeys:
+    - name: coa-publisher-${env:DEPLOY_ENV}-ci
+      description: "API key for requests from ci tools"
+    - name: coa-publisher-${env:DEPLOY_ENV}-joplin
+      description: "API key for requests from joplin"
+    - name: coa-publisher-${env:DEPLOY_ENV}-dev
+      description: "API key for requests manually initiated by devs"
 
 functions:
   queue:
@@ -129,8 +136,17 @@ functions:
       - sns:
           arn: !Ref JanisBuilderTopic
           topicName: Fn::GetAtt [ JanisBuilderTopic, TopicName ]
-    environment:
-      JANIS_BUILDER_FAMILY: janis-builder-${env:DEPLOY_ENV}
+  publish-request:
+    handler: publish_request_handler.handler
+    module: src/handlers
+    package:
+      include:
+        - src/handlers/**
+    events:
+      - http:
+          path: /publish-request
+          method: post
+          private: true
 
 resources:
   - ${file(src/templates/networking.yml)}
