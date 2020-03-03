@@ -31,10 +31,11 @@ phases:
         --build-arg JANIS_BRANCH="$JANIS_BRANCH"
         --build-arg BUILD_ID="$BUILD_ID"
         --build-arg DEPLOYMENT_MODE="$DEPLOYMENT_MODE"
+        --build-arg NETLIFY_SITE_NAME="$NETLIFY_SITE_NAME"
         --build-arg CMS_API="$CMS_API"
         --build-arg CMS_MEDIA="$CMS_MEDIA"
         --build-arg CMS_DOCS="$CMS_DOCS"
-        --build-arg NETLIFY_SITE_NAME="$NETLIFY_SITE_NAME"
+        --build-arg REACT_STATIC_PREFETCH_RATE="$REACT_STATIC_PREFETCH_RATE"
         .
   post_build:
     commands:

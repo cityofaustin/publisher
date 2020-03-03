@@ -2,6 +2,7 @@ import os, boto3, json
 
 from helpers.utils import get_cms_api_url, parse_build_id, get_janis_branch
 import helpers.stages as stages
+from helpers.valid_optional_env_vars import valid_optional_env_vars
 
 
 def run_janis_builder_task(build_item, latest_task_definition):
@@ -36,10 +37,11 @@ def run_janis_builder_task(build_item, latest_task_definition):
     ]
 
     for name, value in build_item["env_vars"].items():
-        task_env_vars.append({
-            'name': name,
-            'value': value
-        })
+        if name in valid_optional_env_vars:
+            task_env_vars.append({
+                'name': name,
+                'value': value
+            })
 
     task = ecs_client.run_task(
         cluster=os.getenv("ECS_CLUSTER"),

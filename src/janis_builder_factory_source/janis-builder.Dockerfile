@@ -26,6 +26,10 @@ ENV CMS_DOCS=$CMS_DOCS
 ARG NETLIFY_SITE_NAME
 ENV NETLIFY_SITE_NAME=$NETLIFY_SITE_NAME
 
+# Set additional optional env_vars
+ARG REACT_STATIC_PREFETCH_RATE
+ENV REACT_STATIC_PREFETCH_RATE=$REACT_STATIC_PREFETCH_RATE
+
 # Clone down your Janis Branch
 RUN git clone -b "$JANIS_BRANCH" --single-branch https://github.com/cityofaustin/janis
 RUN ./scripts/install_yarn_dependencies.sh

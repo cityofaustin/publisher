@@ -2,6 +2,7 @@ import os, boto3, re, io
 from datetime import datetime
 from pytz import timezone
 
+from helpers.valid_optional_env_vars import valid_optional_env_vars
 
 class PublisherDynamoError(Exception):
     def __init__(self, *args):
@@ -136,21 +137,26 @@ def get_netlify_site_name(janis_branch):
 
 def get_janis_builder_factory_env_vars(build_item):
     janis_branch = get_janis_branch(build_item["build_id"])
-    env_vars = {
+    required_env_vars = {
         "JANIS_BRANCH": janis_branch,
         "BUILD_ID": build_item["build_id"],
         "DEPLOYMENT_MODE": get_deployment_mode(janis_branch),
+        "NETLIFY_SITE_NAME": get_netlify_site_name(janis_branch),
         "CMS_API": get_cms_api_url(build_item["joplin"]),
         "CMS_MEDIA": get_cms_media_url(janis_branch),
         "CMS_DOCS": get_cms_docs(janis_branch),
-        "NETLIFY_SITE_NAME": get_netlify_site_name(janis_branch),
     }
 
+    optional_env_vars = {}
+    for key, value in build_item["env_vars"].items():
+        if key in valid_optional_env_vars:
+            optional_env_vars[key] = value
+
     environmentVariablesOverride=[]
-    for key in env_vars:
+    for key, value in {**required_env_vars, **optional_env_vars}.items():
         environmentVariablesOverride.append({
             "name": key,
-            "value": env_vars[key],
+            "value": value,
             "type": "PLAINTEXT",
         })
     return environmentVariablesOverride
