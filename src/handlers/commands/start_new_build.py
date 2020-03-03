@@ -122,7 +122,7 @@ def start_new_build(janis_branch, context):
                 "build_type": {'S': build_config["build_type"]},
                 "joplin": {'S': build_config["joplin"]},
                 "page_ids": {'L': [{'N': str(page_id)} for page_id in build_config["page_ids"]]},
-                "env_vars": {'M': {key: {'S': value} for (key, value) in build_config["env_vars"]}},
+                "env_vars": {'M': {key: {'S': value} for key, value in build_config["env_vars"].items()}},
                 "logs": {'L': [
                     {
                         'M': {

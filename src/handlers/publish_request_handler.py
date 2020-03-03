@@ -5,6 +5,8 @@ from helpers.utils import get_datetime
 
 
 def failure_res(message):
+    print(f"##### Rejected Publish Request")
+    print(f"##### {message}")
     return {
         "statusCode": 422,
         'headers': {'Content-Type': 'application/json'},
@@ -63,6 +65,19 @@ def handler(event, context):
                 return failure_res(f'page_id [{page_id}] is not an integer.')
         page_ids = req_page_ids
 
+    # Validate env_vars
+    req_env_vars = data.get("env_vars")
+    env_vars = {}
+    if req_env_vars:
+        if not isinstance(req_env_vars, dict):
+            return failure_res(f'env_vars must be a dict.')
+        for name, value in req_env_vars.items():
+            if not isinstance(name, str):
+                return failure_res(f'key {name} in env_vars must be a string.')
+            if not isinstance(value, str):
+                return failure_res(f'value {value} in env_vars must be a string.')
+        env_vars = req_env_vars
+
     publisher_table.put_item(
         Item={
             'pk': pk,
@@ -70,10 +85,12 @@ def handler(event, context):
             'status': status,
             'page_ids': page_ids,
             'joplin': joplin,
-            'env_vars': {},
+            'env_vars': env_vars,
             'build_type': build_type,
         }
     )
+
+    print(f"##### Submitted Publish Request pk={pk}, sk={sk}")
 
     return {
         "statusCode": 200,

@@ -15,6 +15,32 @@ def run_janis_builder_task(build_item, latest_task_definition):
 
     # Start the Task
     print(f'##### Running janis_builder task for [{build_id}]')
+
+    task_env_vars = [
+        {
+            'name': 'BUILD_TYPE',
+            'value': build_item['build_type'],
+        },
+        {
+            'name': 'CMS_API',
+            'value': get_cms_api_url(build_item['joplin']),
+        },
+        {
+            'name': 'PAGE_IDS',
+            'value': json.dumps([str(page_id) for page_id in build_item["page_ids"]]),
+        },
+        {
+            'name': 'BUILD_ID',
+            'value': build_id,
+        }
+    ]
+
+    for name, value in build_item["env_vars"].items():
+        task_env_vars.append({
+            'name': name,
+            'value': value
+        })
+
     task = ecs_client.run_task(
         cluster=os.getenv("ECS_CLUSTER"),
         taskDefinition=latest_task_definition,
@@ -37,24 +63,7 @@ def run_janis_builder_task(build_item, latest_task_definition):
             'containerOverrides': [
                 {
                     'name': f'janis-builder-{janis_branch}',
-                    'environment': [
-                        {
-                            'name': 'BUILD_TYPE',
-                            'value': build_item['build_type'],
-                        },
-                        {
-                            'name': 'CMS_API',
-                            'value': get_cms_api_url(build_item['joplin']),
-                        },
-                        {
-                            'name': 'PAGE_IDS',
-                            'value': json.dumps([str(page_id) for page_id in build_item["page_ids"]]),
-                        },
-                        {
-                            'name': 'BUILD_ID',
-                            'value': build_id,
-                        }
-                    ]
+                    'environment': task_env_vars,
                 }
             ]
         },

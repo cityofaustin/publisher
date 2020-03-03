@@ -59,16 +59,6 @@ def handler(event, context):
             print(f"##### Failure: janis_builder_factory did not succeed for [{build_id}].")
             process_build_failure(build_id, context)
         elif (build_status == "SUCCEEDED"):
-            publisher_table.update_item(
-                Key={
-                    'pk': build_pk,
-                    'sk': build_sk,
-                },
-                UpdateExpression="SET stage = :stage",
-                ExpressionAttributeValues={
-                    ":stage": stages.register_janis_builder_task,
-                },
-            )
             register_janis_builder_task(janis_branch)
             process_build_success(build_id, context)
     except Exception as error:
