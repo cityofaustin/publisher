@@ -131,8 +131,9 @@ def get_cms_docs(janis_branch):
     return 'multiple'
 
 
+# Netlify site names are limited to 63 characters
 def get_netlify_site_name(janis_branch):
-    return f'coa-pub-v2-{janis_branch.lower()}'
+    return (f'coa-pub-v2-{janis_branch.lower()}')[:63]
 
 
 def get_janis_builder_factory_env_vars(build_item):
