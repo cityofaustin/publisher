@@ -86,7 +86,7 @@ def process_build_success(build_id, context):
                 "UpdateExpression": "SET #s = :status",
                 "ExpressionAttributeNames": { "#s": "status" },
                 "ExpressionAttributeValues": {
-                    ":status": {'S': f'succeeded#{req["sk"]}'},
+                    ":status": {'S': f'succeeded#{timestamp}'},
                 },
             }
         }
