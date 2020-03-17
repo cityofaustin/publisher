@@ -1,29 +1,36 @@
-FROM python:3.7.4-stretch
-
-# Install node
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
-RUN apt-get update && apt-get install -y nodejs build-essential
-
-# Install yarn
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-RUN apt-get update && apt-get install yarn
+FROM node:12.14.1-alpine3.11
 
 # Install other dependencies
-RUN apt-get update && apt-get install -y git
+RUN apk add --no-cache --upgrade \
+  git \
+  bash \
+  zip
+
+# Install aws-cli
+RUN apk -v --update add \
+    python \
+    py-pip \
+    groff \
+    less \
+    mailcap \
+    && \
+  pip --no-cache-dir install --upgrade awscli==1.16.248 && \
+  apk -v --purge del py-pip && \
+  rm -rf /var/cache/apk/*
+
+# Set DEPLOY_ENV
+ARG DEPLOY_ENV
+ENV DEPLOY_ENV=$DEPLOY_ENV
 
 # Create directories
 RUN mkdir src
 RUN mkdir src/cache
+RUN mkdir src/scripts
 WORKDIR /src
 
 # Copy scripts into /src
-COPY "./scripts/publish.sh" .
-COPY "./scripts/cache_exists.py" .
-COPY "./scripts/install_yarn_dependencies.sh" .
-COPY "./scripts/hello.html" .
+COPY "./scripts" ./scripts
 
-
-# Install python libraries
-COPY "./requirements.txt" .
-RUN pip install -r requirements.txt
+# Install dependencies for scripts
+COPY "./package.json" ./scripts
+RUN yarn install --cwd ./scripts

@@ -1,0 +1,143 @@
+Resources:
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: coa-publisher-${env:DEPLOY_ENV}
+  # A security group for the containers we will run in our ECS Cluster.
+  ClusterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the coa-publisher cluster containers
+      VpcId: !Ref 'VPC'
+  # This is an IAM role which authorizes ECS to manage resources on your
+  # account on your behalf, such as updating your load balancer with the
+  # details of where your containers are, so that traffic can reach your
+  # containers.
+  ECSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: coa-publisher-ecs-${env:DEPLOY_ENV}
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+      - PolicyName: ecs-service
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Action:
+                # Rules which allow ECS to attach network interfaces to instances
+                # on your behalf in order for awsvpc networking mode to work right
+                - 'ec2:AttachNetworkInterface'
+                - 'ec2:CreateNetworkInterface'
+                - 'ec2:CreateNetworkInterfacePermission'
+                - 'ec2:DeleteNetworkInterface'
+                - 'ec2:DeleteNetworkInterfacePermission'
+                - 'ec2:Describe*'
+                - 'ec2:DetachNetworkInterface'
+              Resource: '*'
+
+  # Executes ECS actions https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html
+  JanisBuilderTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: coa-publisher-janis-builder-task-execution-${env:DEPLOY_ENV}
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - ecs-tasks.amazonaws.com
+          Action:
+            - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: AmazonFargateTaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  # Allow the ECS tasks to upload logs to CloudWatch
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  # get permission to pull janis_builder_base image from ECR
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                  - "ecr:BatchCheckLayerAvailability"
+                Resource: '*'
+
+  # The Role used by processes within the Fargate janis_builder task itself
+  JanisBuilderRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: coa-publisher-janis-builder-${env:DEPLOY_ENV}
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - ecs-tasks.amazonaws.com
+          Action:
+            - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: AmazonFargateTaskRolePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:ListBucket'
+                Resource: 'arn:aws:s3:::coa-publisher'
+              - Effect: Allow
+                Action:
+                  # allow GET/PUT for objects in coa-publisher-codebuild s3 bucket
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObject'
+                  - 's3:DeleteObject'
+                  - 's3:PutObject'
+                Resource: 'arn:aws:s3:::coa-publisher/*'
+
+  JanisBuilderTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: coa-publisher-janis-builder-${env:DEPLOY_ENV}
+
+  JanisBuilderTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref JanisBuilderTopic
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 'events.amazonaws.com'
+            Action: sns:Publish
+            Resource: !Ref JanisBuilderTopic
+
+  JanisBuilderCloudWatchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - "aws.ecs"
+        detail-type:
+          - "ECS Task State Change"
+        detail:
+          # We only want to listen for tasks in this ECS Cluster
+          clusterArn:
+            - Fn::GetAtt: [ ECSCluster, Arn ]
+          lastStatus:
+            - STOPPED
+      State: ENABLED
+      Targets:
+        - Arn: !Ref JanisBuilderTopic
+          Id: JanisBuilderTopic

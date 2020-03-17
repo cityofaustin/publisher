@@ -1,0 +1,45 @@
+version: 0.2
+
+env:
+  # These values are stored in the AWS System Manager Parameter Store
+  # https://console.aws.amazon.com/systems-manager/parameters/?region=us-east-1
+  parameter-store:
+    NETLIFY_AUTH_TOKEN: "coa_publisher_netlify_auth_token"
+
+phases:
+  install:
+    runtime-versions:
+      docker: 18
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+      - TAG="$JANIS_BUILDER_ECR_URI:$JANIS_BRANCH-latest"
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build
+        -f ./janis-builder.Dockerfile
+        -t $TAG
+        --build-arg JANIS_BUILDER_BASE_ECR_URI="$JANIS_BUILDER_BASE_ECR_URI"
+        --build-arg VERSION="$DEPLOY_ENV-latest"
+        --build-arg AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION"
+        --build-arg AWS_CONTAINER_CREDENTIALS_RELATIVE_URI="$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
+        --build-arg NETLIFY_AUTH_TOKEN="$NETLIFY_AUTH_TOKEN"
+        --build-arg JANIS_BRANCH="$JANIS_BRANCH"
+        --build-arg BUILD_ID="$BUILD_ID"
+        --build-arg DEPLOYMENT_MODE="$DEPLOYMENT_MODE"
+        --build-arg NETLIFY_SITE_NAME="$NETLIFY_SITE_NAME"
+        --build-arg CMS_API="$CMS_API"
+        --build-arg CMS_MEDIA="$CMS_MEDIA"
+        --build-arg CMS_DOCS="$CMS_DOCS"
+        --build-arg REACT_STATIC_PREFETCH_RATE="$REACT_STATIC_PREFETCH_RATE"
+        .
+  post_build:
+    commands:
+      - if [ $CODEBUILD_BUILD_SUCCEEDING = 0 ]; then exit 1; fi # Exit early if build step failed
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $TAG

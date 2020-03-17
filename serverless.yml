@@ -1,0 +1,156 @@
+service: coa-publisher
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dotenv-plugin
+custom:
+  pythonRequirements:
+    usePipenv: true
+    dockerizePip: true
+    useDownloadCache: true
+    useStaticCache: true
+  dotenv:
+    include:
+      - DEPLOY_ENV
+
+package:
+  individually: true
+  exclude:
+    # Exclude everything by default, manually include the files you need for each lambda.
+    - ".*/**"
+
+provider:
+  name: aws
+  runtime: python3.7
+  deploymentBucket:
+    name: coa-publisher
+  region: us-east-1
+  stage: ${env:DEPLOY_ENV}
+  stackName: coa-publisher-${env:DEPLOY_ENV}
+  timeout: 30
+  stackTags:
+    user:app: publisher
+    user:env: ${env:DEPLOY_ENV}
+    user:project: alpha.austin.gov
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:BatchGetItem
+        - dynamodb:DeleteItem
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:UpdateItem
+        - dynamodb:BatchWriteItem
+      Resource:
+        Fn::GetAtt: [ BuildTable, Arn ]
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:Query
+      Resource:
+        Fn::Join:
+          - ''
+          - - Fn::GetAtt: [ BuildTable, Arn ]
+            - '/index/*'
+    - Effect: Allow
+      Action:
+        - codebuild:StartBuild
+      Resource:
+        Fn::GetAtt: [ CodeBuildProject, Arn ]
+    - Effect: Allow
+      Action:
+        - ecs:RunTask
+        - ecs:RegisterTaskDefinition
+        - ecs:ListTaskDefinitions
+      Resource: '*'
+    - Effect: Allow
+      Action:
+        - iam:PassRole
+      Resource:
+        - Fn::GetAtt: [ JanisBuilderTaskExecutionRole, Arn ]
+        - Fn::GetAtt: [ JanisBuilderRole, Arn ]
+    - Effect: Allow
+      Action:
+        - 's3:ListBucket'
+      Resource: 'arn:aws:s3:::coa-publisher'
+    - Effect: Allow
+      Action:
+        - s3:GetBucketLocation
+        - s3:GetObject
+      Resource: 'arn:aws:s3:::coa-publisher/*'
+  apiKeys:
+    - name: coa-publisher-${env:DEPLOY_ENV}-ci
+      description: "API key for requests from ci tools"
+    - name: coa-publisher-${env:DEPLOY_ENV}-joplin
+      description: "API key for requests from joplin"
+    - name: coa-publisher-${env:DEPLOY_ENV}-dev
+      description: "API key for requests manually initiated by devs"
+
+functions:
+  queue:
+    handler: queue_handler.handler
+    module: src/handlers
+    package:
+      include:
+        - src/handlers/**
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [ BuildTable, StreamArn ]
+          batchSize: 1
+    environment:
+      ECS_CLUSTER: !Ref ECSCluster
+      PUBLIC_SUBNET_ONE: !Ref PublicSubnetOne
+      PUBLIC_SUBNET_TWO: !Ref PublicSubnetTwo
+      CLUSTER_SECURITY_GROUP: !Ref ClusterSecurityGroup
+  janis-builder-factory:
+    handler: janis_builder_factory_handler.handler
+    module: src/handlers
+    package:
+      include:
+        - src/handlers/**
+    events:
+      - sns:
+          arn: !Ref CodeBuildTopic
+          topicName: Fn::GetAtt [ CodeBuildTopic, TopicName ]
+    environment:
+      JANIS_BUILDER_TASK_EXECUTION_ROLE:
+        Fn::GetAtt:
+          - JanisBuilderTaskExecutionRole
+          - Arn
+      JANIS_BUILDER_ROLE:
+        Fn::GetAtt:
+          - JanisBuilderRole
+          - Arn
+      JANIS_BUILDER_ECR_URI: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderEcrUri}
+  janis-builder:
+    handler: janis_builder_handler.handler
+    module: src/handlers
+    package:
+      include:
+        - src/handlers/**
+    events:
+      - sns:
+          arn: !Ref JanisBuilderTopic
+          topicName: Fn::GetAtt [ JanisBuilderTopic, TopicName ]
+  publish-request:
+    handler: publish_request_handler.handler
+    module: src/handlers
+    package:
+      include:
+        - src/handlers/**
+    events:
+      - http:
+          path: /publish-request
+          method: post
+          private: true
+
+resources:
+  - ${file(src/templates/networking.yml)}
+  - ${file(src/templates/ecs.yml)}
+  - ${file(src/templates/logs.yml)}
+  - ${file(src/templates/codebuild.yml)}
+  - ${file(src/templates/dynamodb.yml)}

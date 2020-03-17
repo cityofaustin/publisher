@@ -1,0 +1,7 @@
+Resources:
+  # Log group for janis-builder tasks
+  JanisBuilderLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /coa-publisher-${env:DEPLOY_ENV}/janis-builder
+      RetentionInDays: 14

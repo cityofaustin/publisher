@@ -1,0 +1,120 @@
+Resources:
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: coa-publisher-janis-builder-factory-${env:DEPLOY_ENV}
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/standard:2.0
+        PrivilegedMode: true # Required for building docker images and LOCAL caching
+        EnvironmentVariables:
+          - Name: DEPLOY_ENV
+            Type: PLAINTEXT
+            Value: ${env:DEPLOY_ENV}
+          # JANIS_BUILDER_BASE_ECR_URI is required for your janis-builder.Dockerfile to know which repo to pull from
+          - Name: JANIS_BUILDER_BASE_ECR_URI
+            Type: PLAINTEXT
+            Value: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderBaseEcrUri}
+          # JANIS_BUILDER_ECR_URI is required for the CodeBuild buildspec.yml to know where to push your docker images after you've built them
+          - Name: JANIS_BUILDER_ECR_URI
+            Type: PLAINTEXT
+            Value: ${cf:coa-publisher-persistent-infrastructure.JanisBuilderEcrUri}
+      Source:
+        Type: S3
+        Location: coa-publisher/janis_builder_factory_source/${env:DEPLOY_ENV}/
+        BuildSpec: './buildspec.yml'
+      TimeoutInMinutes: 20
+      Cache:
+        Type: LOCAL # Caches Docker layers on AWS Host build machine
+        Modes:
+          - LOCAL_DOCKER_LAYER_CACHE
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: coa-publisher-janis-builder-factory-${env:DEPLOY_ENV}
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [codebuild.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: CodeBuildExecution
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  # retrieve custom environment variables stored in Amazon EC2 Systems Manager Parameter Store
+                  - 'ssm:GetParameters'
+                  # Allow the ECS tasks to upload logs to CloudWatch
+                  - 'logs:*'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  # allow reading from coa-publisher-codebuild s3 bucket
+                  - 's3:ListBucket'
+                Resource: 'arn:aws:s3:::coa-publisher'
+              - Effect: Allow
+                Action:
+                  # allow GET/PUT for objects in coa-publisher-codebuild s3 bucket
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObject'
+                  - 's3:DeleteObject'
+                  - 's3:PutObject'
+                Resource: 'arn:aws:s3:::coa-publisher/*'
+              - Effect: Allow
+                Action:
+                  # get permission to pull janis_builder_base image from ECR
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:InitiateLayerUpload"
+                  - "ecr:UploadLayerPart"
+                  - "ecr:CompleteLayerUpload"
+                  - "ecr:PutImage"
+                Resource: '*'
+
+  CodeBuildTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: coa-publisher-janis-builder-factory-${env:DEPLOY_ENV}
+
+  CodeBuildTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref CodeBuildTopic
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 'events.amazonaws.com'
+            Action: sns:Publish
+            Resource: !Ref CodeBuildTopic
+
+  CodeBuildCloudWatchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - "aws.codebuild"
+        detail-type:
+          - "CodeBuild Build State Change"
+        detail:
+          build-status:
+            - SUCCEEDED
+            - FAILED
+            - STOPPED
+          project-name:
+            - !Ref CodeBuildProject
+      State: ENABLED
+      Targets:
+        - Arn: !Ref CodeBuildTopic
+          Id: CodeBuildTopic

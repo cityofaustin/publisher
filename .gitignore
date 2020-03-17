@@ -1,14 +1,20 @@
 # misc
 .DS_Store
+__pycache__
 
 # Build Artifacts
 start-build.json
 src/janis_builder_base/requirements.txt
 zappa_settings.json
+node_modules/
+*.tmp
+.serverless/
 
-# Environment Variables
+# Secrets
 .env
+*.pem
 
 # dev
 local
 dist
+.idea

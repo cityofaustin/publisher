@@ -1,0 +1,6 @@
+Resources:
+  Cloudfront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        
