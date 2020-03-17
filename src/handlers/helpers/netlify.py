@@ -6,11 +6,6 @@ netlify_headers = {
     "Content-Type": "application/json",
 }
 
-
-def get_site_name(janis_branch):
-    return f'publisher-v2-{janis_branch.lower()}'
-
-
 # Get site if site already exists
 def get_site(site_name):
     site = None
