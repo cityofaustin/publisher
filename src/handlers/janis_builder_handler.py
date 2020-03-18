@@ -10,7 +10,7 @@ import helpers.stages as stages
 def handler(event, context):
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
-    publisher_table = dynamodb.Table(table_name)
+    queue_table = dynamodb.Table(table_name)
 
     sns_detail = json.loads(event["Records"][0]["Sns"]['Message'])['detail']
     # Someday we might be listening for other tasks besides "janis-builder".
@@ -25,7 +25,7 @@ def handler(event, context):
     janis_branch = get_janis_branch(build_id)
     lambda_cloudwatch_url = get_lambda_cloudwatch_url(context)
     try:
-        publisher_table.update_item(
+        queue_table.update_item(
             Key={
                 'pk': build_pk,
                 'sk': build_sk,

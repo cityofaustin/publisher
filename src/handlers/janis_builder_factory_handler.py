@@ -13,7 +13,7 @@ from helpers.utils import get_lambda_cloudwatch_url, parse_build_id, get_janis_b
 def handler(event, context):
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
-    publisher_table = dynamodb.Table(table_name)
+    queue_table = dynamodb.Table(table_name)
 
     sns_detail = json.loads(event["Records"][0]["Sns"]['Message'])['detail']
     for env_var in sns_detail['additional-information']['environment']['environment-variables']:
@@ -29,7 +29,7 @@ def handler(event, context):
         project_name = sns_detail['project-name']
         stream_name = sns_detail['additional-information']['logs']['stream-name']
         codebuild_url = f'https://console.aws.amazon.com/codesuite/codebuild/projects/{project_name}/build/{project_name}%3A{stream_name}/log?region={os.getenv("AWS_REGION")}'
-        publisher_table.update_item(
+        queue_table.update_item(
             Key={
                 'pk': build_pk,
                 'sk': build_sk,

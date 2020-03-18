@@ -9,7 +9,7 @@ def process_build_failure(build_id, context):
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
-    publisher_table = dynamodb.Table(table_name)
+    queue_table = dynamodb.Table(table_name)
     timestamp = get_datetime()
 
     build_item = get_build_item(build_id)
@@ -26,7 +26,7 @@ def process_build_failure(build_id, context):
 
     req_pk = f'REQ#{janis_branch}'
     print(f"##### Build for [{build_id}] failed.")
-    assinged_reqs = publisher_table.query(
+    assinged_reqs = queue_table.query(
         IndexName="build_id.janis",
         Select='ALL_ATTRIBUTES',
         ScanIndexForward=True,

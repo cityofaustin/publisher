@@ -7,10 +7,10 @@ from helpers.utils import parse_build_id, get_build_item, get_janis_builder_fact
 def start_janis_builder_factory(build_id):
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
-    publisher_table = dynamodb.Table(table_name)
+    queue_table = dynamodb.Table(table_name)
 
     build_pk, build_sk = parse_build_id(build_id)
-    publisher_table.update_item(
+    queue_table.update_item(
         Key={
             'pk': build_pk,
             'sk': build_sk,

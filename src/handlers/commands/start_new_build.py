@@ -9,7 +9,7 @@ def start_new_build(janis_branch, context):
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
-    publisher_table = dynamodb.Table(table_name)
+    queue_table = dynamodb.Table(table_name)
     timestamp = get_datetime()
 
     build_item = get_current_build_item(janis_branch)
@@ -24,7 +24,7 @@ def start_new_build(janis_branch, context):
     # There would only be conflicts for "joplin" values on PR builds,
     # where multiple joplins could potentially update the same janis instance.
     req_pk = f'REQ#{janis_branch}'
-    waiting_reqs = publisher_table.query(
+    waiting_reqs = queue_table.query(
         IndexName="janis.status",
         Select='ALL_ATTRIBUTES',
         ScanIndexForward=False, # Return reqests in reverse chronological order (most recent first)
