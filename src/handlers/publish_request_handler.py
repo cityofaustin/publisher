@@ -18,7 +18,7 @@ def failure_res(message):
 
 def handler(event, context):
     dynamodb = boto3.resource('dynamodb')
-    publisher_table = dynamodb.Table(f'coa_publisher_{os.getenv("DEPLOY_ENV")}')
+    queue_table = dynamodb.Table(f'coa_publisher_{os.getenv("DEPLOY_ENV")}')
     timestamp = get_datetime()
 
     # Validate body
@@ -78,7 +78,7 @@ def handler(event, context):
                 return failure_res(f'value {value} in env_vars must be a string.')
         env_vars = req_env_vars
 
-    publisher_table.put_item(
+    queue_table.put_item(
         Item={
             'pk': pk,
             'sk': sk,

@@ -45,10 +45,10 @@ def get_janis_branch(build_id):
 def get_build_item(build_id):
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
-    publisher_table = dynamodb.Table(table_name)
+    queue_table = dynamodb.Table(table_name)
 
     build_pk, build_sk = parse_build_id(build_id)
-    build = publisher_table.get_item(
+    build = queue_table.get_item(
         Key={
             'pk': build_pk,
             'sk': build_sk,
@@ -65,10 +65,10 @@ def get_build_item(build_id):
 def get_current_build_item(janis_branch):
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
-    publisher_table = dynamodb.Table(table_name)
+    queue_table = dynamodb.Table(table_name)
 
     # Get the CURRENT_BLD for your janis_branch
-    current_build_item = publisher_table.get_item(
+    current_build_item = queue_table.get_item(
         Key={
             'pk': "CURRENT_BLD",
             'sk': janis_branch,

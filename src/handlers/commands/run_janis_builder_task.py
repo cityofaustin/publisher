@@ -9,7 +9,7 @@ def run_janis_builder_task(build_item, latest_task_definition):
     ecs_client = boto3.client('ecs')
     dynamodb = boto3.resource('dynamodb')
     table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
-    publisher_table = dynamodb.Table(table_name)
+    queue_table = dynamodb.Table(table_name)
     build_id = build_item['build_id']
     build_pk, build_sk = parse_build_id(build_id)
     janis_branch = get_janis_branch(build_id)
@@ -73,7 +73,7 @@ def run_janis_builder_task(build_item, latest_task_definition):
 
     # Update the logs for your BLD
     task_id = (task['tasks'][0]['taskArn']).split('task/')[1]
-    publisher_table.update_item(
+    queue_table.update_item(
         Key={
             'pk': build_pk,
             'sk': build_sk,
