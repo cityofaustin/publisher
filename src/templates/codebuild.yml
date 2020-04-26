@@ -67,6 +67,7 @@ Resources:
                   - 's3:GetObject'
                   - 's3:DeleteObject'
                   - 's3:PutObject'
+                  - 's3:PutObjectAcl'
                 Resource: 'arn:aws:s3:::coa-publisher/*'
               - Effect: Allow
                 Action:
@@ -80,6 +81,81 @@ Resources:
                   - "ecr:CompleteLayerUpload"
                   - "ecr:PutImage"
                 Resource: '*'
+              - Effect: Allow
+                Action:
+                  # allow reading from StagingBucket
+                  - 's3:ListBucket'
+                Resource: 'arn:aws:s3:::coa-janis-austin-gov-staging'
+                Condition:
+                  StringEquals:
+                    staging: "${env:DEPLOY_ENV}"
+              - Effect: Allow
+                Action:
+                  # allow GET/PUT for objects in StagingBucket
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObject'
+                  - 's3:DeleteObject'
+                  - 's3:PutObject'
+                  - 's3:PutObjectAcl'
+                Resource: 'arn:aws:s3:::coa-janis-austin-gov-staging/*'
+                Condition:
+                  StringEquals:
+                    staging: "${env:DEPLOY_ENV}"
+              - Effect: Allow
+                Action:
+                  # Allow cache invalidations for StagingCloudfrontDistribution
+                  - 'cloudfront:GetDistribution'
+                  - 'cloudfront:GetStreamingDistribution'
+                  - 'cloudfront:GetDistributionConfig'
+                  - 'cloudfront:ListDistributions'
+                  - 'cloudfront:ListCloudFrontOriginAccessIdentities'
+                  - 'cloudfront:CreateInvalidation'
+                  - 'cloudfront:GetInvalidation'
+                  - 'cloudfront:ListInvalidations'
+                Resource:
+                  Fn::Join:
+                    - ""
+                    - - "arn:aws:cloudfront::"
+                      - !Ref AWS::AccountId
+                      - ":distribution/"
+                      - !Ref StagingCloudfrontDistribution
+              - Effect: Allow
+                Action:
+                  # allow reading from ProductionBucket
+                  - 's3:ListBucket'
+                Resource: 'arn:aws:s3:::janis-austin-gov-production'
+                Condition:
+                  StringEquals:
+                    production: "${env:DEPLOY_ENV}"
+              - Effect: Allow
+                Action:
+                  # allow GET/PUT for objects in ProductionBucket
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObject'
+                  - 's3:DeleteObject'
+                  - 's3:PutObject'
+                Resource: 'arn:aws:s3:::janis-austin-gov-production/*'
+                Condition:
+                  StringEquals:
+                    production: "${env:DEPLOY_ENV}"
+              - Effect: Allow
+                Action:
+                  # Allow cache invalidations for Production CloudfrontDistribution
+                  - 'cloudfront:GetDistribution'
+                  - 'cloudfront:GetStreamingDistribution'
+                  - 'cloudfront:GetDistributionConfig'
+                  - 'cloudfront:ListDistributions'
+                  - 'cloudfront:ListCloudFrontOriginAccessIdentities'
+                  - 'cloudfront:CreateInvalidation'
+                  - 'cloudfront:GetInvalidation'
+                  - 'cloudfront:ListInvalidations'
+                Resource:
+                  Fn::Join:
+                    - ""
+                    - - "arn:aws:cloudfront::"
+                      - !Ref AWS::AccountId
+                      - ":distribution/"
+                      - ${ssm:/coa-publisher/production/cloudfront_distribution_id}
 
   CodeBuildTopic:
     Type: AWS::SNS::Topic

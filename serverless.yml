@@ -106,6 +106,17 @@ functions:
       PUBLIC_SUBNET_ONE: !Ref PublicSubnetOne
       PUBLIC_SUBNET_TWO: !Ref PublicSubnetTwo
       CLUSTER_SECURITY_GROUP: !Ref ClusterSecurityGroup
+      CLOUDFRONT_DISTRIBUTION_ID:
+        # If DEPLOY_ENV=production, use hardcoded value from AWS Paramter Store https://console.aws.amazon.com/systems-manager/parameters/?region=us-east-1
+        # Else if DEPLOY_ENV=staging, get ID from CloudfrontDistribution resource we created
+        # Else return an empty string
+        Fn::If:
+          - IsProduction
+          - ${ssm:/coa-publisher/production/cloudfront_distribution_id}
+          - Fn::If:
+            - IsStaging
+            - !Ref StagingCloudfrontDistribution
+            - ""
   janis-builder-factory:
     handler: janis_builder_factory_handler.handler
     module: src/handlers
@@ -154,3 +165,5 @@ resources:
   - ${file(src/templates/logs.yml)}
   - ${file(src/templates/codebuild.yml)}
   - ${file(src/templates/dynamodb.yml)}
+  - ${file(src/templates/staging.yml)}
+  - ${file(src/templates/production.yml)}

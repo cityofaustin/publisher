@@ -18,6 +18,14 @@ class PublisherDynamoError(Exception):
             return 'Error with dynamodb data.'
 
 
+DEPLOY_ENV = os.getenv("DEPLOY_ENV")
+def is_staging():
+    return DEPLOY_ENV == "staging"
+def is_production():
+    return DEPLOY_ENV == "production"
+table_name = f'coa_publisher_{DEPLOY_ENV}'
+
+
 # Returns the current datetime in central time
 def get_datetime():
     return datetime.now(timezone('US/Central')).isoformat()
@@ -44,7 +52,6 @@ def get_janis_branch(build_id):
 # Returns build_item for a build_id
 def get_build_item(build_id):
     dynamodb = boto3.resource('dynamodb')
-    table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     queue_table = dynamodb.Table(table_name)
 
     build_pk, build_sk = parse_build_id(build_id)
@@ -64,7 +71,6 @@ def get_build_item(build_id):
 # Returns None if there isn't a CURRENT_BLD build_id set
 def get_current_build_item(janis_branch):
     dynamodb = boto3.resource('dynamodb')
-    table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     queue_table = dynamodb.Table(table_name)
 
     # Get the CURRENT_BLD for your janis_branch
@@ -97,7 +103,7 @@ def github_to_aws(branch_name):
 
 
 # Retrieve latest task definition ARN (with revision number)
-# Returns "None" is one doesn't exist
+# Returns "None" if one doesn't exist
 def get_latest_task_definition(janis_branch):
     ecs_client = boto3.client('ecs')
 
@@ -114,38 +120,72 @@ def get_latest_task_definition(janis_branch):
         return None
 
 
-# TODO have logic to handle prod v. staging v. review
 def get_cms_api_url(joplin):
     return f'https://{joplin}.herokuapp.com/api/graphql'
 
 
 def get_cms_media_url(janis_branch):
-    return 'https://joplin-austin-gov-static.s3.amazonaws.com/staging/media'
+    if is_production():
+        return 'https://joplin-austin-gov-static.s3.amazonaws.com/production/media'
+    else:
+        return 'https://joplin-austin-gov-static.s3.amazonaws.com/staging/media'
 
 
-def get_deployment_mode(janis_branch):
-    return 'REVIEW'
+# DEPLOYMENT_MODE is a setting used within Janis to set environment-specific configs.
+def get_deployment_mode():
+    if is_production():
+        return 'PRODUCTION'
+    elif is_staging():
+        return "STAGING"
+    else:
+        return "REVIEW"
 
 
 def get_cms_docs(janis_branch):
-    return 'multiple'
+    if is_production():
+        return 'https://joplin-austin-gov-static.s3.amazonaws.com/production/media/documents'
+    else:
+        return 'multiple'
+
+
+def get_google_analytics():
+    if is_production():
+        return 'UA-110716917-2'
+    else:
+        return 'UA-000000000-0'
+
+
+def get_cloudfront_distribution_id():
+    if is_production() or is_staging():
+        return os.getenv("CLOUDFRONT_DISTRIBUTION_ID")
+    else:
+        return None
 
 
 # Netlify site names are limited to 63 characters
 def get_netlify_site_name(janis_branch):
-    return (f'janis-v3-{janis_branch.lower()}')[:63]
+    if is_production() or is_staging():
+        return None
+    else:
+        return (f'janis-v3-{janis_branch.lower()}')[:63]
 
 
+'''
+    These are the environment variables that get passed into janis_builder container.
+    They are all accessible by janis_builder_base/scripts/build_site.sh
+'''
 def get_janis_builder_factory_env_vars(build_item):
     janis_branch = get_janis_branch(build_item["build_id"])
     required_env_vars = {
         "JANIS_BRANCH": janis_branch,
         "BUILD_ID": build_item["build_id"],
-        "DEPLOYMENT_MODE": get_deployment_mode(janis_branch),
+        "DEPLOYMENT_MODE": get_deployment_mode(),
         "NETLIFY_SITE_NAME": get_netlify_site_name(janis_branch),
         "CMS_API": get_cms_api_url(build_item["joplin"]),
         "CMS_MEDIA": get_cms_media_url(janis_branch),
         "CMS_DOCS": get_cms_docs(janis_branch),
+        "GOOGLE_ANALYTICS": get_google_analytics(),
+        "CLOUDFRONT_DISTRIBUTION_ID": get_cloudfront_distribution_id(),
     }
 
     optional_env_vars = {}
@@ -155,11 +195,13 @@ def get_janis_builder_factory_env_vars(build_item):
 
     environmentVariablesOverride=[]
     for key, value in {**required_env_vars, **optional_env_vars}.items():
-        environmentVariablesOverride.append({
-            "name": key,
-            "value": value,
-            "type": "PLAINTEXT",
-        })
+        # Skip empty values
+        if value:
+            environmentVariablesOverride.append({
+                "name": key,
+                "value": value,
+                "type": "PLAINTEXT",
+            })
     return environmentVariablesOverride
 
 

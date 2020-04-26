@@ -1,0 +1,83 @@
+Conditions:
+  IsStaging:
+    Fn::Equals:
+      - ${env:DEPLOY_ENV}
+      - staging
+Resources:
+  StagingBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsStaging
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: coa-janis-austin-gov-staging
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        ErrorDocument: 404.html
+        IndexDocument: index.html
+  StagingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsStaging
+    Properties:
+      Bucket: !Ref StagingBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Sid: "AllowPublicRead"
+          Effect: Allow
+          Principal:
+            AWS: "*"
+          Action: "s3:GetObject"
+          Resource:
+            Fn::Join:
+              - ""
+              - - "arn:aws:s3:::"
+                - !Ref StagingBucket
+                - "/*"
+  StagingCloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Condition: IsStaging
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - janis3.austintexas.io # our StagingDNSName
+        ViewerCertificate:
+          SslSupportMethod: sni-only
+          AcmCertificateArn: ${ssm:/coa-publisher/staging/certificate_arn}
+          MinimumProtocolVersion: TLSv1.1_2016
+        PriceClass: PriceClass_100
+        Origins:
+          - DomainName:
+              Fn::Join:
+                - ''
+                - - !Ref StagingBucket
+                  - '.s3-website-'
+                  - !Ref AWS::Region
+                  - '.amazonaws.com'
+            Id: staging-s3-bucket
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginKeepaliveTimeout: 5
+              OriginReadTimeout: 30
+              OriginProtocolPolicy: http-only
+        DefaultCacheBehavior:
+          TargetOriginId: staging-s3-bucket
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: False
+        IPV6Enabled: True
+        Enabled: True
+        Comment: "Janis v3 Staging"
+        HttpVersion: http2
+  StagingDNSName:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: CNAME
+      HostedZoneName: 'austintexas.io.' # Pre-created Hosted Zone for austintexas.io
+      Comment: CNAME redirect custom name to Janis Staging CloudFront distribution
+      Name: janis3.austintexas.io
+      TTL: 300
+      ResourceRecords:
+        - !GetAtt [StagingCloudfrontDistribution, DomainName]

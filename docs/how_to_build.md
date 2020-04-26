@@ -63,5 +63,7 @@ For a "rebuild" build_type:
 3. janis_builder_factory_source/janis-builder.Dockerfile to receive env_vars within image
   - Remember to run step (2) `sh scripts/deploy_codebuild_source.sh` to push those changes!
 4. Add to `handlers/helpers/valid_optional_env_vars` if it's an optional environment variable that is passed in with a publish_request's "env_vars" param.
+
+
 Then for "all_pages" and "incremental" build_types:
 1. Add to `handlers/commands/run_janis_builder_task`

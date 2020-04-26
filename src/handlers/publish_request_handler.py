@@ -1,7 +1,13 @@
 import os, boto3, json, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '.'))  # Allows absolute import of "helpers" as a module
 
-from helpers.utils import get_datetime
+from helpers.utils import get_datetime, DEPLOY_ENV, is_staging, is_production
+from helpers.valid_optional_env_vars import valid_optional_env_vars
+
+staging_janis_branch = "master"
+staging_joplin_appname = "joplin-staging"
+production_janis_branch = "production"
+production_joplin_appname = "joplin"
 
 
 def failure_res(message):
@@ -18,7 +24,7 @@ def failure_res(message):
 
 def handler(event, context):
     dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(f'coa_publisher_{os.getenv("DEPLOY_ENV")}')
+    queue_table = dynamodb.Table(f'coa_publisher_{DEPLOY_ENV}')
     timestamp = get_datetime()
 
     # Validate body
@@ -27,18 +33,35 @@ def handler(event, context):
         return failure_res("No 'body' passed with request.")
     data = json.loads(body)
 
-    # Validate janis_branch
-    janis_branch = data.get("janis_branch")
-    if not janis_branch:
-        return failure_res("janis_branch is required")
-    pk = f'REQ#{janis_branch}'
-    sk = timestamp
-    status = f'waiting#{timestamp}'
-
     # Validate joplin_appname
     joplin = data.get("joplin_appname")
     if not joplin:
         return failure_res("joplin_appname is required")
+
+    # Validate janis_branch
+    janis_branch = data.get("janis_branch")
+    if not janis_branch:
+        return failure_res("janis_branch is required")
+    if janis_branch == staging_janis_branch:
+        if not is_staging():
+            return failure_res("Can only deploy to staging Janis from 'staging' Publisher.")
+        if joplin != staging_joplin_appname:
+            return failure_res(f"Can only deploy to staging Janis from {staging_joplin_appname}.")
+    if janis_branch == production_janis_branch:
+        if not is_production():
+            return failure_res("Can only deploy to production Janis from 'production' Publisher.")
+        if joplin != production_joplin_appname:
+            return failure_res(f"Can only deploy to production Janis from {production_joplin_appname}.")
+    # The DEPLOY_ENV determines custom deployment logic.
+    # Make sure that the right Janis is being deployed to Production or Staging.
+    if is_staging() and (janis_branch != staging_janis_branch):
+            return failure_res("'staging' Publisher can only deploy to staging Janis.")
+    if is_production() and (janis_branch != production_janis_branch):
+            return failure_res("'production' Publisher can only deploy to production Janis.")
+
+    pk = f'REQ#{janis_branch}'
+    sk = timestamp
+    status = f'waiting#{timestamp}'
 
     # Validate build_type
     build_type = data.get("build_type")
@@ -76,6 +99,8 @@ def handler(event, context):
                 return failure_res(f'key {name} in env_vars must be a string.')
             if not isinstance(value, str):
                 return failure_res(f'value {value} in env_vars must be a string.')
+            if name not in valid_optional_env_vars:
+                return failure_res(f'env_var {name} is not a valid_optional_env_var.')
         env_vars = req_env_vars
 
     queue_table.put_item(
