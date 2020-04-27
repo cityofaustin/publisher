@@ -33,6 +33,7 @@ case "${DEPLOY_ENV}" in
     S3_BUCKET=s3://coa-publisher/builds/$DEPLOY_ENV/$JANIS_BRANCH
   ;;
 esac
+print_var "S3_BUCKET"
 
 if [ "$BUILD_TYPE" == "rebuild" ]; then
   echo "##### Starting react-static build"

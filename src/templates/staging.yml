@@ -3,6 +3,7 @@ Conditions:
     Fn::Equals:
       - ${env:DEPLOY_ENV}
       - staging
+
 Resources:
   StagingBucket:
     Type: AWS::S3::Bucket
@@ -10,11 +11,12 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       BucketName: coa-janis-austin-gov-staging
-      AccessControl: PublicRead
       WebsiteConfiguration:
         ErrorDocument: 404.html
         IndexDocument: index.html
-  StagingBucketPolicy:
+
+  # Allows StagingCloudfrontDistribution to access bucket
+  StagingBucketBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Condition: IsStaging
     Properties:
@@ -24,8 +26,7 @@ Resources:
         Statement:
           Sid: "AllowPublicRead"
           Effect: Allow
-          Principal:
-            AWS: "*"
+          Principal: "*"
           Action: "s3:GetObject"
           Resource:
             Fn::Join:
@@ -33,6 +34,7 @@ Resources:
               - - "arn:aws:s3:::"
                 - !Ref StagingBucket
                 - "/*"
+
   StagingCloudfrontDistribution:
     Type: AWS::CloudFront::Distribution
     Condition: IsStaging

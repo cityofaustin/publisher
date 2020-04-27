@@ -165,5 +165,6 @@ resources:
   - ${file(src/templates/logs.yml)}
   - ${file(src/templates/codebuild.yml)}
   - ${file(src/templates/dynamodb.yml)}
+  - ${file(src/templates/policies.yml)}
   - ${file(src/templates/staging.yml)}
   - ${file(src/templates/production.yml)}
