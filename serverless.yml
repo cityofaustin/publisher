@@ -81,8 +81,8 @@ provider:
         - s3:GetObject
       Resource: 'arn:aws:s3:::coa-publisher/*'
   apiKeys:
-    - name: coa-publisher-${env:DEPLOY_ENV}-ci
-      description: "API key for requests from ci tools"
+    - name: coa-publisher-${env:DEPLOY_ENV}-janis
+      description: "API key for requests from janis github pushes"
     - name: coa-publisher-${env:DEPLOY_ENV}-joplin
       description: "API key for requests from joplin"
     - name: coa-publisher-${env:DEPLOY_ENV}-dev
