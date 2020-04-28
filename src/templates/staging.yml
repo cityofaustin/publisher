@@ -41,10 +41,10 @@ Resources:
     Properties:
       DistributionConfig:
         Aliases:
-          - janis3.austintexas.io # our StagingDNSName
+          - janis.austintexas.io # our StagingDNSName
         ViewerCertificate:
           SslSupportMethod: sni-only
-          AcmCertificateArn: ${ssm:/coa-publisher/staging/certificate_arn}
+          AcmCertificateArn: ${ssm:/coa-publisher/staging/certificate_arn} # apply pre-created certificate for austintexas.io
           MinimumProtocolVersion: TLSv1.1_2016
         PriceClass: PriceClass_100
         Origins:
@@ -71,7 +71,7 @@ Resources:
             QueryString: False
         IPV6Enabled: True
         Enabled: True
-        Comment: "Janis v3 Staging"
+        Comment: "Janis Staging"
         HttpVersion: http2
 
   StagingDNSName:
@@ -81,7 +81,7 @@ Resources:
       Type: CNAME
       HostedZoneName: 'austintexas.io.' # Pre-created Hosted Zone for austintexas.io
       Comment: CNAME redirect custom name to Janis Staging CloudFront distribution
-      Name: janis3.austintexas.io
+      Name: janis.austintexas.io
       TTL: 300
       ResourceRecords:
         - !GetAtt [StagingCloudfrontDistribution, DomainName]
