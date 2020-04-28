@@ -73,8 +73,10 @@ Resources:
         Enabled: True
         Comment: "Janis v3 Staging"
         HttpVersion: http2
+
   StagingDNSName:
     Type: AWS::Route53::RecordSet
+    Condition: IsStaging
     Properties:
       Type: CNAME
       HostedZoneName: 'austintexas.io.' # Pre-created Hosted Zone for austintexas.io
