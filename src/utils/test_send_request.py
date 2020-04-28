@@ -13,7 +13,7 @@ url = os.getenv("PUBLISH_REQUEST_URL")
 data = {
     "janis_branch": os.getenv("JANIS_BRANCH"),
     "page_ids": [],
-    "joplin_appname": f'joplin-staging',
+    "joplin_appname": os.getenv("JOPLIN"),
     "env_vars": {
         "REACT_STATIC_PREFETCH_RATE": "5",
     },
