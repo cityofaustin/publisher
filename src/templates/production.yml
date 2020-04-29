@@ -3,4 +3,15 @@ Conditions:
     Fn::Equals:
       - ${env:DEPLOY_ENV}
       - production
-# TODO: code-composable production structures, following pattern of what staging has.
+Resources:
+  ProductionBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsProduction
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: coa-janis-austin-gov-production
+      WebsiteConfiguration:
+        ErrorDocument: 404.html
+        IndexDocument: index.html
+
+  # TODO: code-composable production structures, following pattern of what staging has.
