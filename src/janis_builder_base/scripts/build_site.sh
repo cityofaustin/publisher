@@ -24,7 +24,7 @@ print_var "GOOGLE_ANALYTICS"
 # Review sites are hosted on netlify, but we store build output in S3 to allow incremental builds.
 case "${DEPLOY_ENV}" in
   production)
-    S3_BUCKET=s3://janis-austin-gov-production
+    S3_BUCKET=s3://coa-janis-austin-gov-production
   ;;
   staging)
     S3_BUCKET=s3://coa-janis-austin-gov-staging
