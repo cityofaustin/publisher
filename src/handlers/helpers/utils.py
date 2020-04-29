@@ -124,11 +124,13 @@ def get_cms_api_url(joplin):
     return f'https://{joplin}.herokuapp.com/api/graphql'
 
 
-def get_cms_media_url(janis_branch):
+def get_cms_media_url(joplin):
     if is_production():
-        return 'https://joplin-austin-gov-static.s3.amazonaws.com/production/media'
+        return 'https://joplin3-austin-gov-static.s3.amazonaws.com/production/media'
+    if is_staging():
+        return 'https://joplin3-austin-gov-static.s3.amazonaws.com/staging/media'
     else:
-        return 'https://joplin-austin-gov-static.s3.amazonaws.com/staging/media'
+        return f'https://joplin3-austin-gov-static.s3.amazonaws.com/{joplin}/media'
 
 
 # DEPLOYMENT_MODE is a setting used within Janis to set environment-specific configs.
@@ -141,11 +143,13 @@ def get_deployment_mode():
         return "REVIEW"
 
 
-def get_cms_docs(janis_branch):
+def get_cms_docs(joplin):
     if is_production():
-        return 'https://joplin-austin-gov-static.s3.amazonaws.com/production/media/documents'
+        return 'https://joplin3-austin-gov-static.s3.amazonaws.com/production/media/documents'
+    if is_staging():
+        return 'https://joplin3-austin-gov-static.s3.amazonaws.com/staging/media/documents'
     else:
-        return 'multiple'
+        return f'https://joplin3-austin-gov-static.s3.amazonaws.com/{joplin}/media/documents'
 
 
 def get_google_analytics():
@@ -182,8 +186,8 @@ def get_janis_builder_factory_env_vars(build_item):
         "DEPLOYMENT_MODE": get_deployment_mode(),
         "NETLIFY_SITE_NAME": get_netlify_site_name(janis_branch),
         "CMS_API": get_cms_api_url(build_item["joplin"]),
-        "CMS_MEDIA": get_cms_media_url(janis_branch),
-        "CMS_DOCS": get_cms_docs(janis_branch),
+        "CMS_MEDIA": get_cms_media_url(build_item["joplin"]),
+        "CMS_DOCS": get_cms_docs(build_item["joplin"]),
         "GOOGLE_ANALYTICS": get_google_analytics(),
         "CLOUDFRONT_DISTRIBUTION_ID": get_cloudfront_distribution_id(),
     }
