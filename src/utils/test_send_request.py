@@ -6,7 +6,7 @@ import os, json, requests
 from publish_request_handler import handler
 
 headers = {
-    "x-api-key": os.getenv("COA_PUBLISHER_TEST_DEV_API_KEY"),
+    "x-api-key": os.getenv("COA_PUBLISHER_DEV_API_KEY"),
     "content-type": "application/json",
 }
 url = os.getenv("PUBLISH_REQUEST_URL")
