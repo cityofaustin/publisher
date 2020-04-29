@@ -145,9 +145,11 @@ def get_deployment_mode():
 
 def get_cms_docs(janis_branch):
     if is_production():
-        return 'https://joplin-austin-gov-static.s3.amazonaws.com/production/media/documents'
+        return 'https://joplin3-austin-gov-static.s3.amazonaws.com/production/media/documents'
+    if is_staging():
+        return 'https://joplin3-austin-gov-static.s3.amazonaws.com/staging/media/documents'
     else:
-        return 'multiple'
+        return f'https://joplin3-austin-gov-static.s3.amazonaws.com/{joplin}/media/documents'
 
 
 def get_google_analytics():
