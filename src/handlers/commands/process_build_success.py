@@ -3,13 +3,12 @@ import dateutil.parser
 from boto3.dynamodb.conditions import Key
 
 from commands.start_new_build import start_new_build
-from helpers.utils import get_datetime, get_build_item, get_janis_branch
+from helpers.utils import get_datetime, get_build_item, get_janis_branch, table_name
 
 
 def process_build_success(build_id, context):
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
-    table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     queue_table = dynamodb.Table(table_name)
     timestamp = get_datetime()
 

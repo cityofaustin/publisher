@@ -1,14 +1,13 @@
 import os, boto3, json
 from boto3.dynamodb.conditions import Key
 
-from helpers.utils import get_datetime, get_lambda_cloudwatch_url, get_current_build_item
+from helpers.utils import get_datetime, get_lambda_cloudwatch_url, get_current_build_item, table_name
 import helpers.stages as stages
 
 
 def start_new_build(janis_branch, context):
     client = boto3.client('dynamodb')
     dynamodb = boto3.resource('dynamodb')
-    table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     queue_table = dynamodb.Table(table_name)
     timestamp = get_datetime()
 

@@ -1,12 +1,11 @@
 import os, boto3
 
 import helpers.stages as stages
-from helpers.utils import parse_build_id, get_build_item, get_janis_builder_factory_env_vars
+from helpers.utils import parse_build_id, get_build_item, get_janis_builder_factory_env_vars, table_name
 
 
 def start_janis_builder_factory(build_id):
     dynamodb = boto3.resource('dynamodb')
-    table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     queue_table = dynamodb.Table(table_name)
 
     build_pk, build_sk = parse_build_id(build_id)

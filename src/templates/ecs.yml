@@ -3,12 +3,14 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: coa-publisher-${env:DEPLOY_ENV}
+
   # A security group for the containers we will run in our ECS Cluster.
   ClusterSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the coa-publisher cluster containers
       VpcId: !Ref 'VPC'
+
   # This is an IAM role which authorizes ECS to manage resources on your
   # account on your behalf, such as updating your load balancer with the
   # details of where your containers are, so that traffic can reach your
@@ -88,22 +90,6 @@ Resources:
           Action:
             - sts:AssumeRole
       Path: /
-      Policies:
-        - PolicyName: AmazonFargateTaskRolePolicy
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 's3:ListBucket'
-                Resource: 'arn:aws:s3:::coa-publisher'
-              - Effect: Allow
-                Action:
-                  # allow GET/PUT for objects in coa-publisher-codebuild s3 bucket
-                  - 's3:GetBucketLocation'
-                  - 's3:GetObject'
-                  - 's3:DeleteObject'
-                  - 's3:PutObject'
-                Resource: 'arn:aws:s3:::coa-publisher/*'
 
   JanisBuilderTopic:
     Type: AWS::SNS::Topic

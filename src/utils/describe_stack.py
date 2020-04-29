@@ -13,12 +13,7 @@ cf_outputs = cf_client.describe_stacks(
 )['Stacks'][0]['Outputs']
 
 for x in cf_outputs:
-    if x['OutputKey'] == "PublicSubnetOne":
-        print(f'PublicSubnetOne={x["OutputValue"]}')
-    elif x['OutputKey'] == "PublicSubnetTwo":
-        print(f'PublicSubnetTwo={x["OutputValue"]}')
-    elif x['OutputKey'] == "ECSTaskExecutionRole":
-        print(f'ECSTaskExecutionRole={x["OutputValue"]}')
+    print(x)
 
 end = time.time()
 print(end - start)

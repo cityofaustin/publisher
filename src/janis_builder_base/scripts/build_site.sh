@@ -9,6 +9,7 @@ function print_var {
 }
 
 echo "##### Printing environment variables used for react-static build [$BUILD_ID]"
+print_var "DEPLOY_ENV"
 print_var "JANIS_BRANCH"
 print_var "BUILD_ID"
 print_var "DEPLOYMENT_MODE"
@@ -16,6 +17,7 @@ print_var "CMS_API"
 print_var "CMS_MEDIA"
 print_var "CMS_DOCS"
 print_var "NETLIFY_SITE_NAME"
+print_var "GOOGLE_ANALYTICS"
 
 # S3_BUCKET is where react-static build output is placed.
 # Production and Staging sites are hosted directly from their S3_BUCKET.
@@ -25,12 +27,13 @@ case "${DEPLOY_ENV}" in
     S3_BUCKET=s3://janis-austin-gov-production
   ;;
   staging)
-    S3_BUCKET=s3://janis-austin-gov-staging
+    S3_BUCKET=s3://coa-janis-austin-gov-staging
   ;;
   *)
     S3_BUCKET=s3://coa-publisher/builds/$DEPLOY_ENV/$JANIS_BRANCH
   ;;
 esac
+print_var "S3_BUCKET"
 
 if [ "$BUILD_TYPE" == "rebuild" ]; then
   echo "##### Starting react-static build"
@@ -69,7 +72,8 @@ echo "##### Completed upload to S3 in $(($duration / 60)):$(($duration % 60))"
 case "${DEPLOY_ENV}" in
   staging|production)
     # Create a cache invalidation for the Cloudfront Distribution pointing to S3_BUCKET
-    echo "##### TODO"
+    # TODO: have specific invalidation paths for incremental builds?
+    aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*";
   ;;
   *)
     # Review sites are deployed to netlify

@@ -3,13 +3,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute 
 
 from commands.process_build_failure import process_build_failure
 from commands.process_build_success import process_build_success
-from helpers.utils import get_lambda_cloudwatch_url, parse_build_id, get_janis_branch
+from helpers.utils import get_lambda_cloudwatch_url, parse_build_id, get_janis_branch, table_name
 import helpers.stages as stages
 
 
 def handler(event, context):
     dynamodb = boto3.resource('dynamodb')
-    table_name = f'coa_publisher_{os.getenv("DEPLOY_ENV")}'
     queue_table = dynamodb.Table(table_name)
 
     sns_detail = json.loads(event["Records"][0]["Sns"]['Message'])['detail']

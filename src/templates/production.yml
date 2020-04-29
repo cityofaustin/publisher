@@ -1,0 +1,6 @@
+Conditions:
+  IsProduction:
+    Fn::Equals:
+      - ${env:DEPLOY_ENV}
+      - production
+# TODO: code-composable production structures, following pattern of what staging has.
