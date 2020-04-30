@@ -15,7 +15,7 @@ data = {
     "page_ids": [],
     "joplin_appname": os.getenv("JOPLIN"),
     "env_vars": {
-        "REACT_STATIC_PREFETCH_RATE": "5",
+        "REACT_STATIC_PREFETCH_RATE": "0",
     },
     "build_type": "rebuild",
 }

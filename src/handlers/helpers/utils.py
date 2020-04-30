@@ -24,7 +24,7 @@ def is_staging():
 def is_production():
     return DEPLOY_ENV == "production"
 table_name = f'coa_publisher_{DEPLOY_ENV}'
-
+static_s3_bucket = f'https://joplin3-austin-gov-static.s3.{os.getenv("AWS_REGION")}.amazonaws.com'
 
 # Returns the current datetime in central time
 def get_datetime():
@@ -126,11 +126,11 @@ def get_cms_api_url(joplin):
 
 def get_cms_media_url(joplin):
     if is_production():
-        return 'https://joplin3-austin-gov-static.s3.amazonaws.com/production/media'
+        return f'{static_s3_bucket}/production/media'
     if is_staging():
-        return 'https://joplin3-austin-gov-static.s3.amazonaws.com/staging/media'
+        return f'{static_s3_bucket}/staging/media'
     else:
-        return f'https://joplin3-austin-gov-static.s3.amazonaws.com/{joplin}/media'
+        return f'{static_s3_bucket}/{joplin}/media'
 
 
 # DEPLOYMENT_MODE is a setting used within Janis to set environment-specific configs.
@@ -145,11 +145,11 @@ def get_deployment_mode():
 
 def get_cms_docs(joplin):
     if is_production():
-        return 'https://joplin3-austin-gov-static.s3.amazonaws.com/production/media/documents'
+        return f'{static_s3_bucket}/production/media/documents'
     if is_staging():
-        return 'https://joplin3-austin-gov-static.s3.amazonaws.com/staging/media/documents'
+        return f'{static_s3_bucket}/staging/media/documents'
     else:
-        return f'https://joplin3-austin-gov-static.s3.amazonaws.com/{joplin}/media/documents'
+        return f'{static_s3_bucket}/{joplin}/media/documents'
 
 
 def get_google_analytics():
