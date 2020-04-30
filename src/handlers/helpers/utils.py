@@ -24,7 +24,7 @@ def is_staging():
 def is_production():
     return DEPLOY_ENV == "production"
 table_name = f'coa_publisher_{DEPLOY_ENV}'
-static_s3_bucket = f'https://joplin3-austin-gov-static.s3.{os.getenv("AWS_REGION")}.amazonaws.com'
+static_s3_bucket = 'https://joplin3-austin-gov-static.s3.amazonaws.com'
 
 # Returns the current datetime in central time
 def get_datetime():
@@ -124,13 +124,13 @@ def get_cms_api_url(joplin):
     return f'https://{joplin}.herokuapp.com/api/graphql'
 
 
-def get_cms_media_url(joplin):
+def get_cms_media_url(joplin_branch):
     if is_production():
         return f'{static_s3_bucket}/production/media'
     if is_staging():
         return f'{static_s3_bucket}/staging/media'
     else:
-        return f'{static_s3_bucket}/{joplin}/media'
+        return f'{static_s3_bucket}/review/{joplin_branch}/media'
 
 
 # DEPLOYMENT_MODE is a setting used within Janis to set environment-specific configs.
@@ -143,13 +143,24 @@ def get_deployment_mode():
         return "REVIEW"
 
 
-def get_cms_docs(joplin):
+# Get name of joplin_branch from joplin (APPNAME)
+# Strips "joplin-pr-" prefix from PR builds.
+def get_joplin_branch(joplin):
+    if is_production():
+        return "production"
+    if is_staging():
+        return "master"
+    else:
+        return re.split("^joplin-pr-", joplin)[1]
+
+
+def get_cms_docs(joplin_branch):
     if is_production():
         return f'{static_s3_bucket}/production/media/documents'
     if is_staging():
         return f'{static_s3_bucket}/staging/media/documents'
     else:
-        return f'{static_s3_bucket}/{joplin}/media/documents'
+        return f'{static_s3_bucket}/review/{joplin_branch}/media/documents'
 
 
 def get_google_analytics():
@@ -180,14 +191,15 @@ def get_netlify_site_name(janis_branch):
 '''
 def get_janis_builder_factory_env_vars(build_item):
     janis_branch = get_janis_branch(build_item["build_id"])
+    joplin_branch = get_joplin_branch(build_item["joplin"])
     required_env_vars = {
         "JANIS_BRANCH": janis_branch,
         "BUILD_ID": build_item["build_id"],
         "DEPLOYMENT_MODE": get_deployment_mode(),
         "NETLIFY_SITE_NAME": get_netlify_site_name(janis_branch),
         "CMS_API": get_cms_api_url(build_item["joplin"]),
-        "CMS_MEDIA": get_cms_media_url(build_item["joplin"]),
-        "CMS_DOCS": get_cms_docs(build_item["joplin"]),
+        "CMS_MEDIA": get_cms_media_url(joplin_branch),
+        "CMS_DOCS": get_cms_docs(joplin_branch),
         "GOOGLE_ANALYTICS": get_google_analytics(),
         "CLOUDFRONT_DISTRIBUTION_ID": get_cloudfront_distribution_id(),
     }
