@@ -4,6 +4,7 @@ from pytz import timezone
 
 from helpers.valid_optional_env_vars import valid_optional_env_vars
 
+
 class PublisherDynamoError(Exception):
     def __init__(self, *args):
         if args:
@@ -18,6 +19,12 @@ class PublisherDynamoError(Exception):
             return 'Error with dynamodb data.'
 
 
+staging_janis_branch = "master"
+staging_joplin_appname = "joplin-staging"
+production_janis_branch = "production"
+production_joplin_appname = "joplin"
+
+
 DEPLOY_ENV = os.getenv("DEPLOY_ENV")
 def is_staging():
     return DEPLOY_ENV == "staging"
@@ -25,6 +32,7 @@ def is_production():
     return DEPLOY_ENV == "production"
 table_name = f'coa_publisher_{DEPLOY_ENV}'
 static_s3_bucket = 'https://joplin3-austin-gov-static.s3.amazonaws.com'
+
 
 # Returns the current datetime in central time
 def get_datetime():
@@ -146,9 +154,9 @@ def get_deployment_mode():
 # Get name of joplin_branch from joplin (APPNAME)
 # Strips "joplin-pr-" prefix from PR builds.
 def get_joplin_branch(joplin):
-    if is_production():
+    if is_production() or (joplin == production_joplin_appname):
         return "production"
-    if is_staging():
+    if is_staging() or (joplin == staging_joplin_appname):
         return "master"
     else:
         return re.split("^joplin-pr-", joplin)[1]

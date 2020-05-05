@@ -1,13 +1,12 @@
 import os, boto3, json, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '.'))  # Allows absolute import of "helpers" as a module
 
-from helpers.utils import get_datetime, DEPLOY_ENV, is_staging, is_production
+from helpers.utils import \
+    get_datetime, DEPLOY_ENV, \
+    is_staging, is_production, \
+    staging_janis_branch, staging_joplin_appname, \
+    production_janis_branch, production_joplin_appname
 from helpers.valid_optional_env_vars import valid_optional_env_vars
-
-staging_janis_branch = "master"
-staging_joplin_appname = "joplin-staging"
-production_janis_branch = "production"
-production_joplin_appname = "joplin"
 
 
 def failure_res(message):

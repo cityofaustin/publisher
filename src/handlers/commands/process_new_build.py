@@ -17,9 +17,9 @@ def process_new_build(build_id, context):
 
         # Skip if we've already processed this BLD already
         build_stage = build_item["stage"]
-        if build_stage != stages.preparing_to_build:
-            print(f'##### Build [{build_id}] already started')
-            return None
+        # if build_stage != stages.preparing_to_build:
+        #     print(f'##### Build [{build_id}] already started')
+        #     return None
 
         # Start a build, based on your BLD's build_type
         build_type = build_item["build_type"]
@@ -36,4 +36,6 @@ def process_new_build(build_id, context):
                 start_janis_builder_factory(build_id)
     except Exception as error:
         print(error)
+        import traceback
+        print(traceback.format_exc())
         process_build_failure(build_id, context)
