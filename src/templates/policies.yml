@@ -69,7 +69,7 @@ Resources:
           - Effect: Allow
             Action:
               - 's3:ListBucket'
-            Resource: 'arn:aws:s3:::janis-austin-gov-production'
+            Resource: 'arn:aws:s3:::coa-janis-austin-gov-production'
             Condition:
               StringEquals:
                 aws:PrincipalTag/user:env: production
@@ -79,7 +79,7 @@ Resources:
               - 's3:GetObject'
               - 's3:DeleteObject'
               - 's3:PutObject'
-            Resource: 'arn:aws:s3:::janis-austin-gov-production/*'
+            Resource: 'arn:aws:s3:::coa-janis-austin-gov-production/*'
 
   # Allows cache invalidations on Staging Cloudfront Distribution
   StagingCacheInvalidationPolicy:
