@@ -23,6 +23,8 @@ staging_janis_branch = "master"
 staging_joplin_appname = "joplin-staging"
 production_janis_branch = "production"
 production_joplin_appname = "joplin"
+staging_joplin_branch = "master"
+production_joplin_branch = "production"
 
 
 DEPLOY_ENV = os.getenv("DEPLOY_ENV")
@@ -133,9 +135,9 @@ def get_cms_api_url(joplin):
 
 
 def get_cms_media_url(joplin_branch):
-    if is_production():
+    if is_production() or (joplin_branch == production_joplin_branch):
         return f'{static_s3_bucket}/production/media'
-    if is_staging():
+    if is_staging() or (joplin_branch == staging_joplin_branch):
         return f'{static_s3_bucket}/staging/media'
     else:
         return f'{static_s3_bucket}/review/{joplin_branch}/media'
@@ -163,9 +165,9 @@ def get_joplin_branch(joplin):
 
 
 def get_cms_docs(joplin_branch):
-    if is_production():
+    if is_production() or (joplin_branch == production_joplin_branch):
         return f'{static_s3_bucket}/production/media/documents'
-    if is_staging():
+    if is_staging() or (joplin_branch == staging_joplin_branch):
         return f'{static_s3_bucket}/staging/media/documents'
     else:
         return f'{static_s3_bucket}/review/{joplin_branch}/media/documents'
