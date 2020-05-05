@@ -49,5 +49,6 @@ def handler(event, context):
             print(f"##### Failure: janis_builder exited with nonzero exit code for [{build_id}].")
             process_build_failure(build_id, context)
     except Exception as error:
-        print(error)
+        import traceback
+        print(traceback.format_exc())
         process_build_failure(build_id, context)
