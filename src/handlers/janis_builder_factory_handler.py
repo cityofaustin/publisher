@@ -61,5 +61,6 @@ def handler(event, context):
             register_janis_builder_task(janis_branch)
             process_build_success(build_id, context)
     except Exception as error:
-        print(error)
+        import traceback
+        print(traceback.format_exc())
         process_build_failure(build_id, context)

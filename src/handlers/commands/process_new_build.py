@@ -35,5 +35,6 @@ def process_new_build(build_id, context):
                 print(f'##### No latest_task_definition found for [{janis_branch}]. Starting janis_builder_factory.')
                 start_janis_builder_factory(build_id)
     except Exception as error:
-        print(error)
+        import traceback
+        print(traceback.format_exc())
         process_build_failure(build_id, context)
