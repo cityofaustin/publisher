@@ -18,3 +18,7 @@ node_modules/
 local
 dist
 .idea
+
+# test artifacts
+.pytest_cache
+dynamodb_local_latest/
