@@ -4,8 +4,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.'))  # Allows absolute
 from helpers.utils import \
     get_datetime, DEPLOY_ENV, \
     is_staging, is_production, \
+    get_dynamodb_table, \
     staging_janis_branch, staging_joplin_appname, \
-    production_janis_branch, production_joplin_appname
+    production_janis_branch, production_joplin_appname, \
+    has_empty_strings, PublisherDynamoError
 from helpers.valid_optional_env_vars import valid_optional_env_vars
 
 
@@ -22,8 +24,7 @@ def failure_res(message):
 
 
 def handler(event, context):
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(f'coa_publisher_{DEPLOY_ENV}')
+    queue_table = get_dynamodb_table()
     timestamp = get_datetime()
 
     # Validate body
@@ -82,6 +83,8 @@ def handler(event, context):
     else:
         if not isinstance(req_page_ids, list):
             return failure_res(f'page_ids must be a list.')
+        if has_empty_strings(req_page_ids):
+            return failure_res(f'Empty strings are not allowed in page_ids.')
         page_ids = req_page_ids
 
     # Validate env_vars
@@ -90,11 +93,9 @@ def handler(event, context):
     if req_env_vars:
         if not isinstance(req_env_vars, dict):
             return failure_res(f'env_vars must be a dict.')
+        if has_empty_strings(req_env_vars):
+            return failure_res(f'Empty strings are not allowed in env_vars.')
         for name, value in req_env_vars.items():
-            if not isinstance(name, str):
-                return failure_res(f'key {name} in env_vars must be a string.')
-            if not isinstance(value, str):
-                return failure_res(f'value {value} in env_vars must be a string.')
             if name not in valid_optional_env_vars:
                 return failure_res(f'env_var {name} is not a valid_optional_env_var.')
         env_vars = req_env_vars

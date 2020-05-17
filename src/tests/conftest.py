@@ -3,7 +3,7 @@ import sys, pytest
 
 # Set handlers as root import for tests
 sys.path.append(path.join(path.dirname(__file__), '../handlers'))
-sys.path.append(path.join(path.dirname(__file__), '../src'))
+sys.path.append(path.join(path.dirname(__file__), '..'))
 
 # imports "dynamodb" fixture
 from pytest_dynamodb import factories
@@ -14,7 +14,7 @@ def dynamodb_table(dynamodb):
     # Create a coa_publisher_test dynamodb table.
     # Follows the same schema defined in src/templates/dynamodb.yml
     table = dynamodb.create_table(
-        TableName='coa_publisher_test',
+        TableName='coa_publisher_pytest',
         KeySchema=[
             {
                 'AttributeName': 'pk',
@@ -90,7 +90,7 @@ def dynamodb_table(dynamodb):
             'WriteCapacityUnits': 123
         },
     )
-    table.meta.client.get_waiter('table_exists').wait(TableName='coa_publisher_test')
+    table.meta.client.get_waiter('table_exists').wait(TableName='coa_publisher_pytest')
     return table
 
 @pytest.fixture()

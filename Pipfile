@@ -5,6 +5,9 @@ verify_ssl = true
 
 [dev-packages]
 awscli = "==1.16.248"
+pytest-mock = "==3.1.0"
+mock = "==4.0.2"
+pytest-env = "==0.6.2"
 
 [packages]
 boto3 = "==1.13.11"

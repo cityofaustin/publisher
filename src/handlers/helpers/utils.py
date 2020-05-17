@@ -261,4 +261,12 @@ def get_janis_branch(build_id):
     return janis_branch
 
 
-
+def has_empty_strings(data):
+    if isinstance(data, dict):
+        return any([has_empty_strings(v) for k,v in data.items()])
+    elif isinstance(data, list):
+        return any([has_empty_strings(v) for v in data])
+    elif data == "":
+        return True
+    else:
+        return False

@@ -12,7 +12,6 @@ def test_write_pk_sk(dynamodb_client):
         "sk": get_datetime(),
     }
     write_transaction(dynamodb_client, item)
-    print("hi")
 
 
 # Test that an empty string fails as expected.
