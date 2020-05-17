@@ -10,7 +10,7 @@ from pytest_dynamodb import factories
 
 
 @pytest.fixture()
-def dynamo_table(dynamodb):
+def dynamodb_table(dynamodb):
     # Create a coa_publisher_test dynamodb table.
     # Follows the same schema defined in src/templates/dynamodb.yml
     table = dynamodb.create_table(
@@ -94,5 +94,5 @@ def dynamo_table(dynamodb):
     return table
 
 @pytest.fixture()
-def dynamo_client(dynamo_table):
-    return dynamo_table.meta.client
+def dynamodb_client(dynamodb_table):
+    return dynamodb_table.meta.client

@@ -1,14 +1,13 @@
 import os, boto3, json
 
-from helpers.utils import get_cms_api_url, parse_build_id, get_janis_branch, table_name
+from helpers.utils import get_cms_api_url, parse_build_id, get_janis_branch, get_dynamodb_table
 import helpers.stages as stages
 from helpers.valid_optional_env_vars import valid_optional_env_vars
 
 
 def run_janis_builder_task(build_item, latest_task_definition):
     ecs_client = boto3.client('ecs')
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(table_name)
+    queue_table = get_dynamodb_table()
     build_id = build_item['build_id']
     build_pk, build_sk = parse_build_id(build_id)
     janis_branch = get_janis_branch(build_id)

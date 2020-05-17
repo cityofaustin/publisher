@@ -1,6 +1,63 @@
-import pytest
-import boto3, os
-from helpers.utils import dynamoify, dynamoify_each, get_datetime
+# This is all useless now that we can use dynamodb.meta.client for transact_write_items.
+# This file can be deleted once Nick gets over his sunk cost.
+
+
+# Convert a list, dict, or string into a format digestible as a dynamodb item value.
+def dynamoify(data):
+    if type(data) is dict:
+        result = {
+            'M': dynamoify_each(data)
+        }
+        if result['M']:
+            return result
+        # Dynamodb doesn't allow empty sets.
+        else:
+            return None
+    elif type(data) is list:
+        return {
+            'L': [
+                dynamoify(value) for value in data
+                if dynamoify(value) is not None
+            ]
+        }
+    elif type(data) is int:
+        return {'N': data}
+    else:
+        # Default to stringifying all other data types.
+        if data:
+            return {'S': str(data)}
+        else:
+            # Dynamodb doesn't allow empty strings.
+            return None
+
+
+'''
+    dynamoify_each() will dynamo-ify each value within a dict, without dynamoifying the root dict.
+    The output of dynamoify_each() can be used as an "Item" for a dynamodb write_transaction.
+    Example input:
+    {
+        "a": "apple",
+        "b": "banana",
+    }
+    Example return:
+    {
+        "a": {"S": "apple"},
+        "b": {"S": "banana"}
+    }
+    As opposed to dynamoify(), which would return a "Map" type:
+    {
+        "M": {
+            "a": {"S": "apple"},
+            "b": {"S": "banana"}
+        }
+    }
+'''
+def dynamoify_each(data):
+    return {
+        key: dynamoify(value)
+        for key, value in data.items()
+        if dynamoify(value) is not None
+    }
 
 
 # Can we dynamoify a string?
@@ -316,15 +373,3 @@ def test_dynamoify_empty_values_in_list():
         ]
     }
     assert dynamoify(data) == expected
-
-
-# def test_insert_map():
-#     boto3.client('dynamodb', endpoint_url=f'http://localhost:{os.getenv("PUBLISHER_DYNAMODB_PORT")}')
-#     data = {
-#         "pk": "REQ#test",
-#         "sk": get_datetime(),
-#     }
-#     expected = {
-#         "S": "hello world"
-#     }
-#     assert dynamoify(data) == expected

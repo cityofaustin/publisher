@@ -1,12 +1,11 @@
 import os, boto3
 
 import helpers.stages as stages
-from helpers.utils import parse_build_id, get_build_item, get_janis_builder_factory_env_vars, table_name
+from helpers.utils import parse_build_id, get_build_item, get_janis_builder_factory_env_vars, get_dynamodb_table
 
 
 def start_janis_builder_factory(build_id):
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(table_name)
+    queue_table = get_dynamodb_table()
 
     build_pk, build_sk = parse_build_id(build_id)
     queue_table.update_item(

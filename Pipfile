@@ -7,10 +7,10 @@ verify_ssl = true
 awscli = "==1.16.248"
 
 [packages]
-boto3 = "==1.9.238"
-botocore = "==1.12.238"
-pytz = "*"
-requests = "*"
+boto3 = "==1.13.11"
+botocore = "==1.16.11"
+pytz = "==2020.1"
+requests = "==2.23.0"
 pytest-dynamodb = "==2.0.1"
 
 [requires]

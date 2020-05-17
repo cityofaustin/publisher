@@ -32,8 +32,22 @@ def is_staging():
     return DEPLOY_ENV == "staging"
 def is_production():
     return DEPLOY_ENV == "production"
-table_name = f'coa_publisher_{DEPLOY_ENV}'
 static_s3_bucket = 'https://joplin3-austin-gov-static.s3.amazonaws.com'
+table_name = f'coa_publisher_{DEPLOY_ENV}'
+
+def get_dynamodb_table():
+    dynamodb = boto3.resource('dynamodb')
+    return dynamodb.Table(table_name)
+
+
+'''
+"dynamodb.meta.client" is better than the standard "boto3.client('dynamodb')".
+boto3 will automatically encode our values with "dynamodb.meta.client", it won't with the default client.
+Further discussion: https://stackoverflow.com/questions/61844796/can-we-use-transact-write-items-without-specifying-attribute-types
+'''
+def get_dynamodb_client():
+    dynamodb = boto3.resource('dynamodb')
+    return dynamodb.meta.client
 
 
 # Returns the current datetime in central time
@@ -61,8 +75,7 @@ def get_janis_branch(build_id):
 
 # Returns build_item for a build_id
 def get_build_item(build_id):
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(table_name)
+    queue_table = get_dynamodb_table()
 
     build_pk, build_sk = parse_build_id(build_id)
     build = queue_table.get_item(
@@ -80,8 +93,7 @@ def get_build_item(build_id):
 # Get data for the BLD that's currently runnning for a janis_branch
 # Returns None if there isn't a CURRENT_BLD build_id set
 def get_current_build_item(janis_branch):
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(table_name)
+    queue_table = get_dynamodb_table()
 
     # Get the CURRENT_BLD for your janis_branch
     current_build_item = queue_table.get_item(
@@ -249,59 +261,4 @@ def get_janis_branch(build_id):
     return janis_branch
 
 
-# Convert a list, dict, or string into a format digestible as a dynamodb item value.
-def dynamoify(data):
-    if type(data) is dict:
-        result = {
-            'M': dynamoify_each(data)
-        }
-        if result['M']:
-            return result
-        # Dynamodb doesn't allow empty sets.
-        else:
-            return None
-    elif type(data) is list:
-        return {
-            'L': [
-                dynamoify(value) for value in data
-                if dynamoify(value) is not None
-            ]
-        }
-    elif type(data) is int:
-        return {'N': data}
-    else:
-        # Default to stringifying all other data types.
-        if data:
-            return {'S': str(data)}
-        else:
-            # Dynamodb doesn't allow empty strings.
-            return None
 
-
-'''
-    dynamoify_each() will dynamo-ify each value within a dict, without dynamoifying the root dict.
-    The output of dynamoify_each() can be used as an "Item" for a dynamodb write_transaction.
-    Example input:
-    {
-        "a": "apple",
-        "b": "banana",
-    }
-    Example return:
-    {
-        "a": {"S": "apple"},
-        "b": {"S": "banana"}
-    }
-    As opposed to dynamoify(), which would return a "Map" type:
-    {
-        "M": {
-            "a": {"S": "apple"},
-            "b": {"S": "banana"}
-        }
-    }
-'''
-def dynamoify_each(data):
-    return {
-        key: dynamoify(value)
-        for key, value in data.items()
-        if dynamoify(value) is not None
-    }

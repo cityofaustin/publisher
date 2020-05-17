@@ -1,36 +1,35 @@
 import pytest
-from botocore.exceptions import ParamValidationError
+from botocore.exceptions import ClientError
 
 from tests.helpers.write_transaction import write_transaction
-from helpers.utils import dynamoify, dynamoify_each, get_datetime
+from helpers.utils import get_datetime
 
 
-def test_write_pk_sk(dynamo_client):
+# Test that a basic item can be inserted
+def test_write_pk_sk(dynamodb_client):
     item = {
-        "pk": {"S": "BLD#test"},
-        "sk": {"S": get_datetime()},
+        "pk": "BLD#test",
+        "sk": get_datetime(),
     }
-    write_transaction(dynamo_client, item)
+    write_transaction(dynamodb_client, item)
     print("hi")
 
 
-def test_put_dict_with_none(dynamo_client):
+# Test that an empty string fails as expected.
+# Known limitation of dynamodb - you can't insert empty strings
+def test_put_empty_string(dynamodb_client):
     bad_dynamoified_item = {
-        "pk": dynamoify("BLD#test"),
-        "sk": dynamoify(get_datetime()),
-        "bad_dict": {
-            'M': {
-                "apple": None
-            }
-        }
-    }
-    pytest.raises(ParamValidationError, write_transaction, dynamo_client, bad_dynamoified_item)
-
-
-def test_put_empty_string(dynamo_client):
-    bad_dynamoified_item = {
-        "pk": dynamoify("BLD#test"),
-        "sk": dynamoify(get_datetime()),
+        "pk": "BLD#test",
+        "sk": get_datetime(),
         "empty": ""
     }
-    pytest.raises(ParamValidationError, write_transaction, dynamo_client, bad_dynamoified_item)
+    pytest.raises(ClientError, write_transaction, dynamodb_client, bad_dynamoified_item)
+
+
+def test_put_empty_string_from_list(dynamodb_client):
+    bad_dynamoified_item = {
+        "pk": "BLD#test",
+        "sk": get_datetime(),
+        "empty": ["","hi"]
+    }
+    pytest.raises(ClientError, write_transaction, dynamodb_client, bad_dynamoified_item)

@@ -1,15 +1,14 @@
-import os, boto3, json, sys
+import os, json, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute import of "helpers" as a module
 
 from commands.process_build_failure import process_build_failure
 from commands.process_build_success import process_build_success
-from helpers.utils import get_lambda_cloudwatch_url, parse_build_id, get_janis_branch, table_name
+from helpers.utils import get_lambda_cloudwatch_url, parse_build_id, get_dynamodb_table
 import helpers.stages as stages
 
 
 def handler(event, context):
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(table_name)
+    queue_table = get_dynamodb_table()
 
     sns_detail = json.loads(event["Records"][0]["Sns"]['Message'])['detail']
     # Someday we might be listening for other tasks besides "janis-builder".
@@ -21,7 +20,6 @@ def handler(event, context):
                 break
     print(f"##### janis_builder fargate task finished for [{build_id}].")
     build_pk, build_sk = parse_build_id(build_id)
-    janis_branch = get_janis_branch(build_id)
     lambda_cloudwatch_url = get_lambda_cloudwatch_url(context)
     try:
         queue_table.update_item(

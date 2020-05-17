@@ -1,14 +1,13 @@
-import os, boto3, json
 import dateutil.parser
 from boto3.dynamodb.conditions import Key
 
-from helpers.utils import get_datetime, get_build_item, get_janis_branch, table_name
+from helpers.utils import get_datetime, get_build_item, get_janis_branch, \
+    table_name, get_dynamodb_table, get_dynamodb_client
 
 
 def process_build_failure(build_id, context):
-    client = boto3.client('dynamodb')
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(table_name)
+    queue_table = get_dynamodb_table()
+    client = get_dynamodb_client()
     timestamp = get_datetime()
 
     build_item = get_build_item(build_id)
@@ -29,7 +28,7 @@ def process_build_failure(build_id, context):
         IndexName="build_id.janis",
         Select='ALL_ATTRIBUTES',
         ScanIndexForward=True,
-        KeyConditionExpression= Key('build_id').eq(build_id) & Key('pk').eq(req_pk)
+        KeyConditionExpression=Key('build_id').eq(build_id) & Key('pk').eq(req_pk)
     )['Items']
 
     write_item_batches = []
@@ -38,13 +37,13 @@ def process_build_failure(build_id, context):
         "Update": {
             "TableName": table_name,
             "Key": {
-                "pk": {'S': "CURRENT_BLD"},
-                "sk": {'S': janis_branch},
+                "pk": "CURRENT_BLD",
+                "sk": janis_branch,
             },
             "UpdateExpression": "REMOVE build_id",
             "ConditionExpression": "build_id = :build_id",
             "ExpressionAttributeValues": {
-                ":build_id": {'S': build_id},
+                ":build_id": build_id,
             },
             "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
         }
@@ -53,15 +52,17 @@ def process_build_failure(build_id, context):
         "Update": {
             "TableName": table_name,
             "Key": {
-                "pk": {'S': build_pk},
-                "sk": {'S': build_sk},
+                "pk": build_pk,
+                "sk": build_sk,
             },
             "UpdateExpression": "SET #s = :status, total_build_time = :total_build_time",
             "ExpressionAttributeValues": {
-                ":status": {'S': f'failed#{timestamp}'},
-                ":total_build_time": {'S': total_build_time},
+                ":status": f'failed#{timestamp}',
+                ":total_build_time": total_build_time,
             },
-            "ExpressionAttributeNames": { "#s": "status" },
+            "ExpressionAttributeNames": {
+                "#s": "status"
+            },
             "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
         }
     }
@@ -79,16 +80,18 @@ def process_build_failure(build_id, context):
             "Update": {
                 "TableName": table_name,
                 "Key": {
-                    "pk": {'S': req["pk"]},
-                    "sk": {'S': req["sk"]},
+                    "pk": req["pk"],
+                    "sk": req["sk"],
                 },
                 "UpdateExpression": "REMOVE build_id SET failed_build_ids = list_append(if_not_exists(failed_build_ids, :empty_list), :failed_build_id), #s = :status",
-                "ExpressionAttributeNames": { "#s": "status" },
+                "ExpressionAttributeNames": {
+                    "#s": "status"
+                },
                 "ExpressionAttributeValues": {
                     # Reset status to original waiting status with original timestamp ("sk") to preserve request queuing order
-                    ":status": {'S': f'waiting#{req["sk"]}'},
-                    ":empty_list": {'L': []},
-                    ":failed_build_id": {'L': [{'S': build_id}]},
+                    ":status": f'waiting#{req["sk"]}',
+                    ":empty_list": [],
+                    ":failed_build_id": [build_id],
                 },
             }
         }
