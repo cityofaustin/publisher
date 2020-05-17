@@ -1,7 +1,7 @@
 import os, boto3, json
 from boto3.dynamodb.conditions import Key
 
-from helpers.utils import get_datetime, get_lambda_cloudwatch_url, get_current_build_item, table_name
+from helpers.utils import get_datetime, get_lambda_cloudwatch_url, get_current_build_item, table_name, dynamoify
 import helpers.stages as stages
 
 
@@ -120,8 +120,8 @@ def start_new_build(janis_branch, context):
                 "stage": {'S': stages.preparing_to_build},
                 "build_type": {'S': build_config["build_type"]},
                 "joplin": {'S': build_config["joplin"]},
-                "page_ids": {'L': [{'S': str(page_id)} for page_id in build_config["page_ids"]]},
-                "env_vars": {'M': {key: {'S': value} for key, value in build_config["env_vars"].items()}},
+                "page_ids": dynamoify(build_config["page_ids"]),
+                "env_vars": dynamoify(build_config["env_vars"]),
                 "logs": {'L': [
                     {
                         'M': {

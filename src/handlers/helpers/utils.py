@@ -109,7 +109,7 @@ def get_current_build_item(janis_branch):
 # Replaces any non letter, number or "-" characters with "-"
 # 255 character limit
 def github_to_aws(branch_name):
-    return re.sub('[^\w\d-]','-',branch_name)[:255]
+    return re.sub('[^\\w\\d-]','-',branch_name)[:255]
 
 
 # Retrieve latest task definition ARN (with revision number)
@@ -247,3 +247,61 @@ def get_janis_branch(build_id):
     build_pk, build_sk = parse_build_id(build_id)
     janis_branch = build_pk.split('#')[1]
     return janis_branch
+
+
+# Convert a list, dict, or string into a format digestible as a dynamodb item value.
+def dynamoify(data):
+    if type(data) is dict:
+        result = {
+            'M': dynamoify_each(data)
+        }
+        if result['M']:
+            return result
+        # Dynamodb doesn't allow empty sets.
+        else:
+            return None
+    elif type(data) is list:
+        return {
+            'L': [
+                dynamoify(value) for value in data
+                if dynamoify(value) is not None
+            ]
+        }
+    elif type(data) is int:
+        return {'N': data}
+    else:
+        # Default to stringifying all other data types.
+        if data:
+            return {'S': str(data)}
+        else:
+            # Dynamodb doesn't allow empty strings.
+            return None
+
+
+'''
+    dynamoify_each() will dynamo-ify each value within a dict, without dynamoifying the root dict.
+    The output of dynamoify_each() can be used as an "Item" for a dynamodb write_transaction.
+    Example input:
+    {
+        "a": "apple",
+        "b": "banana",
+    }
+    Example return:
+    {
+        "a": {"S": "apple"},
+        "b": {"S": "banana"}
+    }
+    As opposed to dynamoify(), which would return a "Map" type:
+    {
+        "M": {
+            "a": {"S": "apple"},
+            "b": {"S": "banana"}
+        }
+    }
+'''
+def dynamoify_each(data):
+    return {
+        key: dynamoify(value)
+        for key, value in data.items()
+        if dynamoify(value) is not None
+    }

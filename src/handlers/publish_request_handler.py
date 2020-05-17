@@ -82,9 +82,6 @@ def handler(event, context):
     else:
         if not isinstance(req_page_ids, list):
             return failure_res(f'page_ids must be a list.')
-        for page_id in req_page_ids:
-            if not isinstance(page_id, str):
-                return failure_res(f'page_id [{page_id}] is not a string.')
         page_ids = req_page_ids
 
     # Validate env_vars

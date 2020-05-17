@@ -15,6 +15,10 @@ Download dynamodb from this link: https://docs.aws.amazon.com/amazondynamodb/lat
 
 Extract the directory and copy it into the `/tests` directory. It must match the setting we've set in pytest.ini (`dynamodb_dir = ./src/tests/dynamodb_local_latest`) so that the pytest_dynamodb library can find it. https://pypi.org/project/pytest-dynamodb/.
 
+<p align="left">
+  <img src="/docs/images/dynamo_dir.png" width="200">
+</p>
+
 More notes about running dynamodb locally: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.UsageNotes.html
 
 ### Changing the Dynamodb port

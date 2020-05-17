@@ -1,6 +1,6 @@
 import pytest
 import boto3, os
-from helpers.utils import dynamoify, get_datetime
+from helpers.utils import dynamoify, dynamoify_each, get_datetime
 
 
 # Can we dynamoify a string?
@@ -71,14 +71,20 @@ def test_dynamoify_dict():
         "b": "second",
         "c": "third",
     }
-    expected = {
+    dynamoify_expected = {
         'M': {
             "a": {"S": "first"},
             "b": {"S": "second"},
             "c": {"S": "third"},
         }
     }
-    assert dynamoify(data) == expected
+    dynamoify_each_expected = {
+        "a": {"S": "first"},
+        "b": {"S": "second"},
+        "c": {"S": "third"},
+    }
+    assert dynamoify(data) == dynamoify_expected
+    assert dynamoify_each(data) == dynamoify_each_expected
 
 
 # Can we dynamoify a nested dict?
@@ -95,7 +101,7 @@ def test_dynamoify_nested_dict():
         },
         "c": "third",
     }
-    expected = {
+    dynamoify_expected = {
         'M': {
             "a": {
                 "M": {
@@ -117,7 +123,28 @@ def test_dynamoify_nested_dict():
             "c": {"S": "third"},
         }
     }
-    assert dynamoify(data) == expected
+    dynamoify_each_expected = {
+        "a": {
+            "M": {
+                "aa": {"S": "apple"},
+                "ab": {"S": "pie"},
+            }
+        },
+        "b": {
+            "M": {
+                "bb": {
+                    "M": {
+                        "bbb": {
+                            "S": "banana"
+                        }
+                    }
+                }
+            }
+        },
+        "c": {"S": "third"},
+    }
+    assert dynamoify(data) == dynamoify_expected
+    assert dynamoify_each(data) == dynamoify_each_expected
 
 
 # Can we dynamoify a list in a dict?
@@ -133,9 +160,9 @@ def test_dynamoify_list_in_dict():
         ],
         "c": "third",
     }
-    expected = {
+    dynamoify_expected = {
         'M': {
-            "a": {
+            "a":  {
                 "M": {
                     "aa": {"S": "apple"},
                     "ab": {"S": "pie"},
@@ -150,39 +177,23 @@ def test_dynamoify_list_in_dict():
             "c": {"S": "third"},
         }
     }
-
-
-# Can we dynamoify a list in a dict?
-def test_dynamoify_list_in_dict():
-    data = {
+    dynamoify_each_expected = {
         "a": {
-            "aa": "apple",
-            "ab": "pie"
+            "M": {
+                "aa": {"S": "apple"},
+                "ab": {"S": "pie"},
+            }
         },
-        "b": [
-            "bb",
-            "bbc"
-        ],
-        "c": "third",
+        "b": {
+            "L": [
+                {"S": "bb"},
+                {"S": "bbc"},
+            ]
+        },
+        "c": {"S": "third"},
     }
-    expected = {
-        'M': {
-            "a": {
-                "M": {
-                    "aa": {"S": "apple"},
-                    "ab": {"S": "pie"},
-                }
-            },
-            "b": {
-                "L": [
-                    {"S": "bb"},
-                    {"S": "bbc"},
-                ]
-            },
-            "c": {"S": "third"},
-        }
-    }
-    assert dynamoify(data) == expected
+    assert dynamoify(data) == dynamoify_expected
+    assert dynamoify_each(data) == dynamoify_each_expected
 
 
 # Can we dynamoify a dict in a list?
@@ -206,6 +217,102 @@ def test_dynamoify_dict_in_list():
                     }
                 }
             },
+        ]
+    }
+    assert dynamoify(data) == expected
+
+
+def test_dynamoify_logs():
+    data = [
+        {
+            "stage": "stage_one",
+            "url": "www.demo.x",
+        }
+    ]
+    expected = {'L': [
+        {
+            'M': {
+                'stage': {'S': "stage_one"},
+                'url': {'S': "www.demo.x"},
+            }
+        }
+    ]}
+    assert dynamoify(data) == expected
+
+
+def test_dynamoify_empty_set():
+    data = {}
+    expected = None
+    assert dynamoify(data) == expected
+
+
+def test_dynamoify_empty_string():
+    data = ""
+    expected = None
+    assert dynamoify(data) == expected
+
+
+def test_dynamoify_list_with_empty_values():
+    data = [None, ""]
+    expected = {"L": []}
+    assert dynamoify(data) == expected
+
+
+def test_dynamoify_empty_values_in_dict():
+    data = {
+        "a": "apple",
+        "b": None,
+        "c": "",
+        "d": {
+            "a": "",
+            "c": {
+                "d": None
+            }
+        },
+        "e": {
+            "a": "",
+            "c": {
+                "d": "hi"
+            }
+        }
+    }
+    dynamoify_expected = {
+        "M": {
+            "a": {"S": "apple"},
+            "e": {"M": {
+                "c": {
+                    "M": {
+                        "d": {"S": "hi"}
+                    }
+                }
+            }}
+        }
+    }
+    dynamoify_each_expected = {
+        "a": {"S": "apple"},
+        "e": {"M": {
+            "c": {
+                "M": {
+                    "d": {"S": "hi"}
+                }
+            }
+        }}
+    }
+    assert dynamoify(data) == dynamoify_expected
+    assert dynamoify_each(data) == dynamoify_each_expected
+
+
+def test_dynamoify_empty_values_in_list():
+    data = [
+        None,
+        "",
+        [None, None, "c"],
+        "d"
+    ]
+    expected = {
+        "L": [
+            {"L": [{"S": "c"}]},
+            {"S": "d"}
         ]
     }
     assert dynamoify(data) == expected
