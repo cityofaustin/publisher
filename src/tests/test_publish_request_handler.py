@@ -241,7 +241,24 @@ env_vars_vals = [
 pages_vals = [
     None,
     [],
-    # TODO
+    [
+     {
+        "id": 101,
+        "global_id": 'b2ZmaWNpYWxfZG9jdW1lbnQ6MTAx',
+        "is_primary": True,
+        "is_page": True,
+        "content_type": "official_documents",
+        "author": 3
+     },
+     {
+        "id": 102,
+        "global_id": 'c2VydmljZV9wYWdlOjEwMg==',
+        "is_primary": False,
+        "is_page": True,
+        "content_type": "service_page",
+        "author": 3
+     }
+    ]
 ]
 all_combinations = []
 for build_type in build_type_vals:
