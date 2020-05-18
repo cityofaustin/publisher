@@ -25,8 +25,8 @@ def run_janis_builder_task(build_item, latest_task_definition):
             'value': get_cms_api_url(build_item['joplin']),
         },
         {
-            'name': 'PAGE_IDS',
-            'value': json.dumps([str(page_id) for page_id in build_item["page_ids"]]),
+            'name': 'PAGES',
+            'value': json.dumps([str(page) for page in build_item["pages"]]),
         },
         {
             'name': 'BUILD_ID',

@@ -28,24 +28,24 @@ def test_patching_as_function(mocker):
 
 # Baseline test to show that mocker works in our following test
 def test_nested_baseline(mocker):
-    from tests.helpers.testing_tools_demo import nested_is_staging
+    from tests.helpers.testing_tools_helper import nested_is_staging
     assert nested_is_staging() is False
 
 
 # Test that mocker allows us to mock a function that's nested inside an external file.
-# This is subtle. We are replacing the "is_staging" instance used within "tests.helpers.testing_tools_demo".
+# This is subtle. We are replacing the "is_staging" instance used within "tests.helpers.testing_tools_helper".
 # That way, when "nested_is_staging" calls "is_staging", its using our mocked version.
 # This will be useful for replacing nested functions in our handlers.
 # Read through this section a couple of times: https://docs.python.org/3/library/unittest.mock.html#where-to-patch
 def test_patching_nested(mocker):
-    mocker.patch('tests.helpers.testing_tools_demo.is_staging', return_value=True)
-    from tests.helpers.testing_tools_demo import nested_is_staging
+    mocker.patch('tests.helpers.testing_tools_helper.is_staging', return_value=True)
+    from tests.helpers.testing_tools_helper import nested_is_staging
     assert nested_is_staging() is True
 
 
 # Test that patching can work with a re-import
 def test_patching_nested_after_import(mocker):
-    from tests.helpers.testing_tools_demo import nested_is_staging
-    mocker.patch('tests.helpers.testing_tools_demo.is_staging', return_value=True)
-    from tests.helpers.testing_tools_demo import nested_is_staging
+    from tests.helpers.testing_tools_helper import nested_is_staging
+    mocker.patch('tests.helpers.testing_tools_helper.is_staging', return_value=True)
+    from tests.helpers.testing_tools_helper import nested_is_staging
     assert nested_is_staging() is True

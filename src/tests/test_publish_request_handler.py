@@ -144,36 +144,36 @@ def test_bad_build_types(patch_demo_table, build_type):
     assert res_body["message"] == f'[{build_type}] is not a valid build_type.'
 
 
-@pytest.mark.parametrize("page_ids", ["a string", {"a": "apple"}])
-def test_page_ids_wrong_types(patch_demo_table, page_ids):
+@pytest.mark.parametrize("pages", ["a string", {"a": "apple"}])
+def test_pages_wrong_types(patch_demo_table, pages):
     context = {}
     event = make_event({
         "joplin_appname": "pytest",
         "janis_branch": "pytest",
         "build_type": "rebuild",
-        "page_ids": page_ids
+        "pages": pages
     })
     res = publish_request_handler(event, context)
     assert res["statusCode"] == 422
     res_body = json.loads(res["body"])
-    assert res_body["message"] == f'page_ids must be a list.'
+    assert res_body["message"] == f'pages must be a list.'
 
 
-@pytest.mark.parametrize("page_ids", [
+@pytest.mark.parametrize("pages", [
     [{"id": 6, "author": ""}],
 ])
-def test_page_ids_empty_strings(patch_demo_table, page_ids):
+def test_pages_empty_strings(patch_demo_table, pages):
     context = {}
     event = make_event({
         "joplin_appname": "pytest",
         "janis_branch": "pytest",
         "build_type": "rebuild",
-        "page_ids": page_ids
+        "pages": pages
     })
     res = publish_request_handler(event, context)
     assert res["statusCode"] == 422
     res_body = json.loads(res["body"])
-    assert res_body["message"] == f'Empty strings are not allowed in page_ids.'
+    assert res_body["message"] == f'Empty strings are not allowed in pages.'
 
 
 @pytest.mark.parametrize("env_vars", ["a string", ["apple", "banana"]])
@@ -238,7 +238,7 @@ env_vars_vals = [
     {"REACT_STATIC_PREFETCH_RATE": 0},
     {"REACT_STATIC_PREFETCH_RATE": 10},
 ]
-page_ids_vals = [
+pages_vals = [
     None,
     [],
     # TODO
@@ -248,13 +248,13 @@ for build_type in build_type_vals:
     for janis in janis_vals:
         for joplin_appname in joplin_vals:
             for env_vars in env_vars_vals:
-                for page_ids in page_ids_vals:
+                for pages in pages_vals:
                     all_combinations.append({
                         "build_type": build_type,
                         "janis_branch": janis,
                         "joplin_appname": joplin_appname,
                         "env_vars": env_vars,
-                        "page_ids": page_ids,
+                        "pages": pages,
                     })
 @pytest.mark.parametrize("data", all_combinations)
 def test_valid_publish_requests(patch_demo_table, dynamodb_table, data):
@@ -270,7 +270,7 @@ def test_valid_publish_requests(patch_demo_table, dynamodb_table, data):
     sk = request_id.split("#")[2]
     request_item = dynamodb_table.get_item(
         Key={"pk": pk, "sk": sk},
-        ProjectionExpression='build_id, #s, page_ids, joplin, env_vars, build_type',
+        ProjectionExpression='build_id, #s, pages, joplin, env_vars, build_type',
         ExpressionAttributeNames={
             "#s": "status"
         }
@@ -282,11 +282,11 @@ def test_valid_publish_requests(patch_demo_table, dynamodb_table, data):
     expected_build_type = data['build_type']
     assert request_item['build_type'] == expected_build_type
 
-    expected_page_ids = data['page_ids']
-    if expected_page_ids is None:
-        # publish_request_handler should default page_ids to []
-        expected_page_ids = []
-    assert request_item['page_ids'] == expected_page_ids
+    expected_pages = data['pages']
+    if expected_pages is None:
+        # publish_request_handler should default pages to []
+        expected_pages = []
+    assert request_item['pages'] == expected_pages
 
     expected_env_vars = data['env_vars']
     if expected_env_vars is None:

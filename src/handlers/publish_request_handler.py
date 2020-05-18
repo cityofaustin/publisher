@@ -76,16 +76,16 @@ def handler(event, context):
     ):
         return failure_res(f'[{build_type}] is not a valid build_type.')
 
-    # Validate page_ids
-    req_page_ids = data.get("page_ids")
-    if not req_page_ids:
-        page_ids = []
+    # Validate pages
+    req_pages = data.get("pages")
+    if not req_pages:
+        pages = []
     else:
-        if not isinstance(req_page_ids, list):
-            return failure_res(f'page_ids must be a list.')
-        if has_empty_strings(req_page_ids):
-            return failure_res(f'Empty strings are not allowed in page_ids.')
-        page_ids = req_page_ids
+        if not isinstance(req_pages, list):
+            return failure_res(f'pages must be a list.')
+        if has_empty_strings(req_pages):
+            return failure_res(f'Empty strings are not allowed in pages.')
+        pages = req_pages
 
     # Validate env_vars
     req_env_vars = data.get("env_vars")
@@ -105,7 +105,7 @@ def handler(event, context):
             'pk': pk,
             'sk': sk,
             'status': status,
-            'page_ids': page_ids,
+            'pages': pages,
             'joplin': joplin,
             'env_vars': env_vars,
             'build_type': build_type,

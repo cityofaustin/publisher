@@ -40,7 +40,7 @@ def start_new_build(janis_branch, context):
         "build_id": build_id,
         "build_type": None,
         "joplin": None,
-        "page_ids": [],
+        "pages": [],
         "env_vars": {},
     }
     updated_req_configs = []
@@ -89,9 +89,9 @@ def start_new_build(janis_branch, context):
         ):
             build_config["build_type"] = "incremental"
 
-        # Add "page_ids", exclude duplicates
-        build_config["page_ids"] = list(set(
-            build_config["page_ids"] + req["page_ids"]
+        # Add "pages", exclude duplicates
+        build_config["pages"] = list(set(
+            build_config["pages"] + req["pages"]
         ))
 
     write_item_batches = []
@@ -120,7 +120,7 @@ def start_new_build(janis_branch, context):
                 "stage": stages.preparing_to_build,
                 "build_type": build_config["build_type"],
                 "joplin": build_config["joplin"],
-                "page_ids": build_config["page_ids"],
+                "pages": build_config["pages"],
                 "env_vars": build_config["env_vars"],
                 "logs": [
                     {
