@@ -242,22 +242,22 @@ pages_vals = [
     None,
     [],
     [
-     {
-        "id": 101,
-        "global_id": 'b2ZmaWNpYWxfZG9jdW1lbnQ6MTAx',
-        "is_primary": True,
-        "is_page": True,
-        "content_type": "official_documents",
-        "author": 3
-     },
-     {
-        "id": 102,
-        "global_id": 'c2VydmljZV9wYWdlOjEwMg==',
-        "is_primary": False,
-        "is_page": True,
-        "content_type": "service_page",
-        "author": 3
-     }
+        {
+            "id": 101,
+            "global_id": 'b2ZmaWNpYWxfZG9jdW1lbnQ6MTAx',
+            "is_primary": True,
+            "is_page": True,
+            "content_type": "official_documents",
+            "author": 3
+        },
+        {
+            "id": 102,
+            "global_id": 'c2VydmljZV9wYWdlOjEwMg==',
+            "is_primary": False,
+            "is_page": True,
+            "content_type": "service_page",
+            "author": 3
+        }
     ]
 ]
 all_combinations = []
@@ -282,9 +282,8 @@ def test_valid_publish_requests(patch_demo_table, dynamodb_table, data):
 
     # Check that REQ item exists and contains expected data
     res_body = json.loads(res["body"])
-    request_id = res_body["request_id"]
-    pk = f'REQ#{data["janis_branch"]}'
-    sk = request_id.split("#")[2]
+    pk = res_body["pk"]
+    sk = res_body["sk"]
     request_item = dynamodb_table.get_item(
         Key={"pk": pk, "sk": sk},
         ProjectionExpression='build_id, #s, pages, joplin, env_vars, build_type',
@@ -303,6 +302,10 @@ def test_valid_publish_requests(patch_demo_table, dynamodb_table, data):
     if expected_pages is None:
         # publish_request_handler should default pages to []
         expected_pages = []
+    # publish_request_handler adds a timestamp for each page.
+    # This helps order page requests when they get consolidated into a single BLD item.
+    for page in expected_pages:
+        page["timestamp"] = sk
     assert request_item['pages'] == expected_pages
 
     expected_env_vars = data['env_vars']

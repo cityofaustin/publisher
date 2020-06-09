@@ -85,6 +85,8 @@ def handler(event, context):
             return failure_res(f'pages must be a list.')
         if has_empty_strings(req_pages):
             return failure_res(f'Empty strings are not allowed in pages.')
+        for page in req_pages:
+            page["timestamp"] = timestamp
         pages = req_pages
 
     # Validate env_vars
@@ -118,6 +120,7 @@ def handler(event, context):
         "statusCode": 200,
         'headers': {'Content-Type': 'application/json'},
         "body": json.dumps({
-            "request_id": f'{pk}#{sk}',
+            "pk": pk,
+            "sk": sk
         })
     }

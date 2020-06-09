@@ -22,4 +22,5 @@ data = {
 
 
 res = requests.post(url, data=json.dumps(data), headers=headers)
+print(res)
 print(res.json())
