@@ -33,7 +33,9 @@ We have 4 scripts used to deploy the Publisher. Not all 4 of them should be run 
   - This must be done for each DEPLOY_ENV.
   - Before we build out all the AWS Resources for Publisher in step (3), we need to put the build instructions for janis_builder_factory's CodeBuild project in our S3 Bucket.
   - Why do we need to do this first before building everything else? Because the CodeBuild Resource won't launch properly if there isn't a codebuild_source to draw from.
-  - When do I need to re-run this step? If you make any changes to the files in `src/janis_builder_factory_source/*`.
+  - When do I need to re-run this step? If you make any changes to the files in `src/janis_builder_factory_source/*`:
+    - `janis-builder.Dockerfile`
+    - `buildspec.yml`
 
 3. sh src/scripts/deploy_publisher.sh
   - This must be done for each DEPLOY_ENV.
