@@ -42,6 +42,7 @@ def start_new_build(janis_branch, context):
         "joplin": None,
         "pages": [],
         "env_vars": {},
+        "api_keys": [],
     }
     updated_req_configs = []
 
@@ -53,6 +54,9 @@ def start_new_build(janis_branch, context):
             "sk": req["sk"],
         }
         updated_req_configs.append(updated_req)
+
+        if req["api_key"]:
+            build_config["api_keys"].append(req["api_key"])
 
         # Handle "joplin" attribute
         if not build_config["joplin"]:

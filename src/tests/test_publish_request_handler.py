@@ -29,18 +29,9 @@ def test_no_body(patch_demo_table):
     assert res_body["message"] == "No 'body' passed with request."
 
 
-def test_no_api_key(patch_demo_table):
-    context = {}
-    event = make_event({"a": "apple"})
-    res = publish_request_handler(event, context)
-    assert res["statusCode"] == 422
-    res_body = json.loads(res["body"])
-    assert res_body["message"] == "api_key is required"
-
-
 def test_no_joplin_appname(patch_demo_table):
     context = {}
-    event = make_event({"api_key": "dummy-api-key"})
+    event = make_event({"a": "apple"})
     res = publish_request_handler(event, context)
     assert res["statusCode"] == 422
     res_body = json.loads(res["body"])
@@ -50,7 +41,6 @@ def test_no_joplin_appname(patch_demo_table):
 def test_no_janis_branch(patch_demo_table):
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": "master"
     })
     res = publish_request_handler(event, context)
@@ -62,7 +52,6 @@ def test_no_janis_branch(patch_demo_table):
 def test_deploy_to_staging_from_nonstaging_env(patch_demo_table):
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": staging_joplin_appname,
         "janis_branch": staging_janis_branch
     })
@@ -78,7 +67,6 @@ def test_deploy_to_staging_from_nonstaging_joplin(patch_demo_table, mocker):
     mocker.patch('handlers.publish_request_handler.is_staging', return_value=True)
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": "pr-not-staging",
         "janis_branch": staging_janis_branch
     })
@@ -91,7 +79,6 @@ def test_deploy_to_staging_from_nonstaging_joplin(patch_demo_table, mocker):
 def test_deploy_to_prod_from_nonprod_env(patch_demo_table):
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": production_joplin_appname,
         "janis_branch": production_janis_branch
     })
@@ -106,7 +93,6 @@ def test_deploy_to_prod_from_nonprod_joplin(patch_demo_table, mocker):
     mocker.patch('handlers.publish_request_handler.is_production', return_value=True)
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": "pr-not-prod",
         "janis_branch": production_janis_branch
     })
@@ -121,7 +107,6 @@ def test_deploy_staging_to_wrong_janis(patch_demo_table, mocker):
     mocker.patch('handlers.publish_request_handler.is_staging', return_value=True)
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": staging_joplin_appname,
         "janis_branch": "not-staging-janis"
     })
@@ -136,7 +121,6 @@ def test_deploy_staging_to_wrong_janis(patch_demo_table, mocker):
     mocker.patch('handlers.publish_request_handler.is_production', return_value=True)
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": production_joplin_appname,
         "janis_branch": "not-prod-janis"
     })
@@ -150,7 +134,6 @@ def test_deploy_staging_to_wrong_janis(patch_demo_table, mocker):
 def test_bad_build_types(patch_demo_table, build_type):
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": "pytest",
         "janis_branch": "pytest",
         "build_type": build_type,
@@ -195,11 +178,39 @@ def test_pages_empty_strings(patch_demo_table, pages):
     assert res_body["message"] == f'Empty strings are not allowed in pages.'
 
 
+@pytest.mark.parametrize("pages", [
+    [{"id": 6}],
+])
+def test_pages_missing_api_key(patch_demo_table, pages):
+    context = {}
+    event = make_event({
+        "joplin_appname": "pytest",
+        "janis_branch": "pytest",
+        "build_type": "rebuild",
+        "pages": pages
+    })
+    res = publish_request_handler(event, context)
+    assert res["statusCode"] == 422
+    res_body = json.loads(res["body"])
+    assert res_body["message"] == f'api_key is required when updating specific pages'
+
+
+def test_empty_pages_allows_missing_api_key(patch_demo_table):
+    context = {}
+    event = make_event({
+        "joplin_appname": "pytest",
+        "janis_branch": "pytest",
+        "build_type": "rebuild",
+        "pages": []
+    })
+    res = publish_request_handler(event, context)
+    assert res["statusCode"] == 200
+
+
 @pytest.mark.parametrize("env_vars", ["a string", ["apple", "banana"]])
 def test_env_vars_wrong_types(patch_demo_table, env_vars):
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": "pytest",
         "janis_branch": "pytest",
         "build_type": "rebuild",
@@ -218,7 +229,6 @@ def test_env_vars_wrong_types(patch_demo_table, env_vars):
 def test_env_vars_empty_string(patch_demo_table, env_var):
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": "pytest",
         "janis_branch": "pytest",
         "build_type": "rebuild",
@@ -237,7 +247,6 @@ def test_env_vars_empty_string(patch_demo_table, env_var):
 def test_invalid_env_var(patch_demo_table, env_var):
     context = {}
     event = make_event({
-        "api_key": "dummy-api-key",
         "joplin_appname": "pytest",
         "janis_branch": "pytest",
         "build_type": "rebuild",

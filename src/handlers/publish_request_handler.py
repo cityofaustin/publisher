@@ -33,12 +33,6 @@ def handler(event, context):
         return failure_res("No 'body' passed with request.")
     data = json.loads(body)
 
-    # Validate api_key
-    # The api_key is used to send a response back to Joplin on publish success.
-    api_key = data.get("api_key")
-    if not api_key:
-        return failure_res("api_key is required")
-
     # Validate joplin_appname
     joplin = data.get("joplin_appname")
     if not joplin:
@@ -83,6 +77,7 @@ def handler(event, context):
         return failure_res(f'[{build_type}] is not a valid build_type.')
 
     # Validate pages
+    api_key = data.get("api_key")
     req_pages = data.get("pages")
     if not req_pages:
         pages = []
@@ -93,6 +88,12 @@ def handler(event, context):
             return failure_res(f'Empty strings are not allowed in pages.')
         for page in req_pages:
             page["timestamp"] = timestamp
+
+        # The api_key is used to send a response back to Joplin on publish success.
+        # Not required for all requests, only ones that have specific pages that must be updated.
+        if not api_key:
+            return failure_res("api_key is required when updating specific pages")
+
         pages = req_pages
 
     # Validate env_vars
