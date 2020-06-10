@@ -37,12 +37,21 @@ def start_new_build(janis_branch, context):
     build_id = f'BLD#{janis_branch}#{timestamp}'
     build_pk = f'BLD#{janis_branch}'
     build_config = {
+        "pk": build_pk,
+        "sk": timestamp,
         "build_id": build_id,
+        "status": "building",
         "build_type": None,
         "joplin": None,
         "pages": [],
         "env_vars": {},
         "api_keys": [],
+        "logs": [
+            {
+                'stage': stages.preparing_to_build,
+                'url': get_lambda_cloudwatch_url(context),
+            }
+        ],
     }
     updated_req_configs = []
 
@@ -106,7 +115,7 @@ def start_new_build(janis_branch, context):
             "Item": {
                 "pk": "CURRENT_BLD",
                 "sk": janis_branch,
-                "build_id": build_config["build_id"],
+                "build_id": build_id,
             },
             # ConditionExpression makes sure that there isn't another build process already running for the same janis_branch
             "ConditionExpression": "attribute_not_exists(build_id)",
@@ -116,23 +125,7 @@ def start_new_build(janis_branch, context):
     new_build_item = {
         "Put": {
             "TableName": table_name,
-            "Item": {
-                "pk": build_pk,
-                "sk": timestamp,
-                "build_id": build_config["build_id"],
-                "status": "building",
-                "stage": stages.preparing_to_build,
-                "build_type": build_config["build_type"],
-                "joplin": build_config["joplin"],
-                "pages": build_config["pages"],
-                "env_vars": build_config["env_vars"],
-                "logs": [
-                    {
-                        'stage': stages.preparing_to_build,
-                        'url': get_lambda_cloudwatch_url(context),
-                    }
-                ],
-            },
+            "Item": build_config,
             "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
         }
     }
