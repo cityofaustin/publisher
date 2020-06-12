@@ -41,6 +41,7 @@ def start_new_build(janis_branch, context):
         "sk": timestamp,
         "build_id": build_id,
         "status": "building",
+        "stage": stages.preparing_to_build,
         "build_type": None,
         "joplin": None,
         "pages": [],
@@ -64,9 +65,6 @@ def start_new_build(janis_branch, context):
         }
         updated_req_configs.append(updated_req)
 
-        if req["api_key"]:
-            build_config["api_keys"].append(req["api_key"])
-
         # Handle "joplin" attribute
         if not build_config["joplin"]:
             # The most recent request will set the value of "joplin" for the build
@@ -79,6 +77,9 @@ def start_new_build(janis_branch, context):
                 # And the data from a "cancelled" req should not be added to the build_config
                 continue
         updated_req["build_id"] = build_id
+
+        if req["api_key"]:
+            build_config["api_keys"].append(req["api_key"])
 
         # Handle "env_vars" attribute
         for env_var in req["env_vars"]:
