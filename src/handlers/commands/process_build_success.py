@@ -25,6 +25,8 @@ def process_build_success(build_id, context):
     end_build_time = dateutil.parser.parse(timestamp)
     total_build_time = str(end_build_time - start_build_time)
 
+    send_publish_succeeded_message(build_item)
+
     req_pk = f'REQ#{janis_branch}'
     assinged_reqs = queue_table.query(
         IndexName="build_id.janis",
@@ -100,7 +102,5 @@ def process_build_success(build_id, context):
     for write_item_batch in write_item_batches:
         client.transact_write_items(TransactItems=write_item_batch)
     print(f'##### Successful build for [{build_id}] complete.')
-
-    send_publish_succeeded_message(build_item)
 
     start_new_build(janis_branch, context)
