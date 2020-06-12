@@ -102,10 +102,8 @@ def start_new_build(janis_branch, context):
         ):
             build_config["build_type"] = "incremental"
 
-        # Add "pages", exclude duplicates
-        build_config["pages"] = list(set(
-            build_config["pages"] + req["pages"]
-        ))
+        # Add all "pages" from requests
+        build_config["pages"].append(req["pages"])
 
     write_item_batches = []
     write_item_batch = []

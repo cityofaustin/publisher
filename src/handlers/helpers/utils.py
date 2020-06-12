@@ -142,8 +142,12 @@ def get_latest_task_definition(janis_branch):
         return None
 
 
+def get_joplin_url(joplin):
+    return f'https://{joplin}.herokuapp.com'
+
+
 def get_cms_api_url(joplin):
-    return f'https://{joplin}.herokuapp.com/api/graphql'
+    return f'{get_joplin_url(joplin)}/api/graphql'
 
 
 def get_cms_media_url(joplin_branch):

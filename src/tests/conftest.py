@@ -93,6 +93,14 @@ def dynamodb_table(dynamodb):
     table.meta.client.get_waiter('table_exists').wait(TableName='coa_publisher_pytest')
     return table
 
+
 @pytest.fixture()
 def dynamodb_client(dynamodb_table):
     return dynamodb_table.meta.client
+
+
+# Patches publish_request_handler's get_dynamodb_table() function to use our local dynamodb_client fixture.
+# Most tests are excepted to fail before there is an interaction with dynamodb. But we'll run this patch for each of them just in case of a false negative.
+@pytest.fixture
+def patch_demo_table(mocker, dynamodb_table):
+    mocker.patch('handlers.publish_request_handler.get_dynamodb_table', return_value=dynamodb_table)

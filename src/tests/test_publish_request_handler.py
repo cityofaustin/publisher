@@ -13,13 +13,6 @@ def make_event(data):
     }
 
 
-# Patches publish_request_handler's get_dynamodb_table() function to use our local dynamodb_client fixture.
-# Most tests are excepted to fail before there is an interaction with dynamodb. But we'll run this patch for each of them just in case of a false negative.
-@pytest.fixture
-def patch_demo_table(mocker, dynamodb_table):
-    mocker.patch('handlers.publish_request_handler.get_dynamodb_table', return_value=dynamodb_table)
-
-
 def test_no_body(patch_demo_table):
     context = {}
     event = {}
@@ -276,7 +269,8 @@ pages_vals = [
         {
             "id": 101,
             "global_id": 'b2ZmaWNpYWxfZG9jdW1lbnQ6MTAx',
-            "is_primary": True,
+            "triggered_build": True,
+            "action": "publish",
             "is_page": True,
             "content_type": "official_documents",
             "author": 3
@@ -284,7 +278,8 @@ pages_vals = [
         {
             "id": 102,
             "global_id": 'c2VydmljZV9wYWdlOjEwMg==',
-            "is_primary": False,
+            "triggered_build": False,
+            "action": "publish",
             "is_page": True,
             "content_type": "service_page",
             "author": 3

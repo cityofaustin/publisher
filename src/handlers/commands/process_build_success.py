@@ -3,6 +3,7 @@ import dateutil.parser
 from boto3.dynamodb.conditions import Key
 
 from commands.start_new_build import start_new_build
+from commands.send_publish_succeeded_message import send_publish_succeeded_message
 from helpers.utils import get_datetime, get_build_item, get_janis_branch, \
     table_name, get_dynamodb_table, get_dynamodb_client
 
@@ -99,4 +100,12 @@ def process_build_success(build_id, context):
     for write_item_batch in write_item_batches:
         client.transact_write_items(TransactItems=write_item_batch)
     print(f'##### Successful build for [{build_id}] complete.')
+
+    try:
+        send_publish_succeeded_message(build_item)
+    except Exception:
+        import traceback
+        print(traceback.format_exc())
+        print(f'##### Error with send_publish_succeeded_message')
+
     start_new_build(janis_branch, context)
