@@ -105,8 +105,8 @@ def start_new_build(janis_branch, context):
 
         # Add all "pages" from request
         for page in req["pages"]:
-            page.req_pk = req["pk"]
-            page.req.sk = req["sk"]
+            page["req_pk"] = req["pk"]
+            page["req_sk"] = req["sk"]
             build_config["pages"].append(page)
 
     write_item_batches = []
