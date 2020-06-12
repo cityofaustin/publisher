@@ -16,7 +16,7 @@ def stringify_decimal(obj):
 def send_publish_succeeded_message(build_item):
     joplin_url = get_joplin_url(build_item["joplin"])
     res = requests.post(
-        url=joplin_url,
+        url=f"{joplin_url}/publish_succeeded",
         data=json.dumps({
             "pages": build_item["pages"],
             "api_keys": build_item["api_keys"]
@@ -28,6 +28,6 @@ def send_publish_succeeded_message(build_item):
         },
     )
     if res.status_code != 200:
-        logger.error(f"publish_succeeded_message failed with status {res.status_code}")
-        logger.error(f"message: {res.json()['message']}")
+        print(f"publish_succeeded_message failed with status {res.status_code}")
+        print(f"message: {res.json()['message']}")
         raise Exception(f"publish_succeeded_message failed: {res.json()['message']}")
