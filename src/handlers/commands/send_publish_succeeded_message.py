@@ -1,6 +1,16 @@
 import requests, json
+from decimal import Decimal
 
 from helpers.utils import get_joplin_url
+
+
+# Decimal values can't be parsed by json.dumps()
+# Any numeric value returned from Dynamodb will be a Decimal type. (such as a page's id and author)
+def stringify_decimal(obj):
+    if isinstance(obj, Decimal):
+        return str(obj)
+    else:
+        return obj
 
 
 def send_publish_succeeded_message(build_item):
@@ -10,7 +20,7 @@ def send_publish_succeeded_message(build_item):
         data=json.dumps({
             "pages": build_item["pages"],
             "api_keys": build_item["api_keys"]
-        }),
+        }, default=stringify_decimal),
         headers={
             "Content-Type": "application/json",
             # Joplin-Api-Key Header name set by API_KEY_CUSTOM_HEADER setting in Joplin

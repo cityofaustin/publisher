@@ -101,11 +101,6 @@ def process_build_success(build_id, context):
         client.transact_write_items(TransactItems=write_item_batch)
     print(f'##### Successful build for [{build_id}] complete.')
 
-    try:
-        send_publish_succeeded_message(build_item)
-    except Exception:
-        import traceback
-        print(traceback.format_exc())
-        print(f'##### Error with send_publish_succeeded_message')
+    send_publish_succeeded_message(build_item)
 
     start_new_build(janis_branch, context)
