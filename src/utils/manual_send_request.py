@@ -12,7 +12,7 @@ headers = {
 url = os.getenv("PUBLISH_REQUEST_URL")
 data = {
     "janis_branch": os.getenv("JANIS_BRANCH"),
-    "page_ids": [],
+    "pages": [],
     "joplin_appname": os.getenv("JOPLIN"),
     "env_vars": {
         "REACT_STATIC_PREFETCH_RATE": "0",
@@ -22,4 +22,5 @@ data = {
 
 
 res = requests.post(url, data=json.dumps(data), headers=headers)
+print(res)
 print(res.json())

@@ -11,3 +11,5 @@ The Publisher is a microservice used to manage Janis PR deployments on netlify. 
 - [Architectural Diagram](/docs/diagram.md)
 - [How Janis is built](/docs/how_is_janis_built.md)
 - [How to deploy your own Publisher](/docs/how_to_build.md)
+- [How to run manually](/docs/how_to_run_manually.md)
+- [Pytest](/docs/pytest.md)

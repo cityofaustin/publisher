@@ -1,14 +1,14 @@
 import os, boto3, json
 from boto3.dynamodb.conditions import Key
 
-from helpers.utils import get_datetime, get_lambda_cloudwatch_url, get_current_build_item, table_name
+from helpers.utils import get_datetime, get_lambda_cloudwatch_url, get_current_build_item, \
+    table_name, get_dynamodb_table, get_dynamodb_client
 import helpers.stages as stages
 
 
 def start_new_build(janis_branch, context):
-    client = boto3.client('dynamodb')
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(table_name)
+    queue_table = get_dynamodb_table()
+    client = get_dynamodb_client()
     timestamp = get_datetime()
 
     build_item = get_current_build_item(janis_branch)
@@ -37,11 +37,22 @@ def start_new_build(janis_branch, context):
     build_id = f'BLD#{janis_branch}#{timestamp}'
     build_pk = f'BLD#{janis_branch}'
     build_config = {
+        "pk": build_pk,
+        "sk": timestamp,
         "build_id": build_id,
+        "status": "building",
+        "stage": stages.preparing_to_build,
         "build_type": None,
         "joplin": None,
-        "page_ids": [],
+        "pages": [],
         "env_vars": {},
+        "api_keys": [],
+        "logs": [
+            {
+                'stage': stages.preparing_to_build,
+                'url': get_lambda_cloudwatch_url(context),
+            }
+        ],
     }
     updated_req_configs = []
 
@@ -67,6 +78,9 @@ def start_new_build(janis_branch, context):
                 continue
         updated_req["build_id"] = build_id
 
+        if req["api_key"]:
+            build_config["api_keys"].append(req["api_key"])
+
         # Handle "env_vars" attribute
         for env_var in req["env_vars"]:
             # Only add env_var value if it hasn't already been added.
@@ -89,10 +103,11 @@ def start_new_build(janis_branch, context):
         ):
             build_config["build_type"] = "incremental"
 
-        # Add "page_ids", exclude duplicates
-        build_config["page_ids"] = list(set(
-            build_config["page_ids"] + req["page_ids"]
-        ))
+        # Add all "pages" from request
+        for page in req["pages"]:
+            page["req_pk"] = req["pk"]
+            page["req_sk"] = req["sk"]
+            build_config["pages"].append(page)
 
     write_item_batches = []
     write_item_batch = []
@@ -100,9 +115,9 @@ def start_new_build(janis_branch, context):
         "Put": {
             "TableName": table_name,
             "Item": {
-                "pk": {'S': "CURRENT_BLD"},
-                "sk": {'S': janis_branch},
-                "build_id": {'S': build_config["build_id"]},
+                "pk": "CURRENT_BLD",
+                "sk": janis_branch,
+                "build_id": build_id,
             },
             # ConditionExpression makes sure that there isn't another build process already running for the same janis_branch
             "ConditionExpression": "attribute_not_exists(build_id)",
@@ -112,25 +127,7 @@ def start_new_build(janis_branch, context):
     new_build_item = {
         "Put": {
             "TableName": table_name,
-            "Item": {
-                "pk": {'S': build_pk},
-                "sk": {'S': timestamp},
-                "build_id": {'S': build_config["build_id"]},
-                "status": {'S': "building"},
-                "stage": {'S': stages.preparing_to_build},
-                "build_type": {'S': build_config["build_type"]},
-                "joplin": {'S': build_config["joplin"]},
-                "page_ids": {'L': [{'S': str(page_id)} for page_id in build_config["page_ids"]]},
-                "env_vars": {'M': {key: {'S': value} for key, value in build_config["env_vars"].items()}},
-                "logs": {'L': [
-                    {
-                        'M': {
-                            'stage': {'S': stages.preparing_to_build},
-                            'url': {'S': get_lambda_cloudwatch_url(context)},
-                        }
-                    }
-                ]},
-            },
+            "Item": build_config,
             "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
         }
     }
@@ -145,22 +142,22 @@ def start_new_build(janis_branch, context):
             write_item_batch = []
 
         UpdateExpression = "SET #s = :status"
-        ExpressionAttributeNames = { "#s": "status" } # because "status" is a reserved word, you can't explicitly use it in an UpdateExpression
+        ExpressionAttributeNames = {"#s": "status"} # because "status" is a reserved word, you can't explicitly use it in an UpdateExpression
         ExpressionAttributeValues = {}
         if "canceled_by" in updated_req:
             UpdateExpression = UpdateExpression + ", canceled_by = :canceled_by"
-            ExpressionAttributeValues[":status"] = {'S': f'cancelled#{timestamp}'}
-            ExpressionAttributeValues[":canceled_by"] = {'S': updated_req["canceled_by"]}
+            ExpressionAttributeValues[":status"] = f'cancelled#{timestamp}'
+            ExpressionAttributeValues[":canceled_by"] = updated_req["canceled_by"]
         if "build_id" in updated_req:
             UpdateExpression = UpdateExpression + ", build_id = :build_id"
-            ExpressionAttributeValues[":status"] = {'S': f'assigned#{timestamp}'}
-            ExpressionAttributeValues[":build_id"] = {'S': updated_req["build_id"]}
+            ExpressionAttributeValues[":status"] = f'assigned#{timestamp}'
+            ExpressionAttributeValues[":build_id"] = updated_req["build_id"]
         updated_req_item = {
             "Update": {
                 "TableName": table_name,
                 "Key": {
-                    "pk": {'S': updated_req["pk"]},
-                    "sk": {'S': updated_req["sk"]},
+                    "pk": updated_req["pk"],
+                    "sk": updated_req["sk"],
                 },
                 "UpdateExpression": UpdateExpression,
                 "ExpressionAttributeNames": ExpressionAttributeNames,

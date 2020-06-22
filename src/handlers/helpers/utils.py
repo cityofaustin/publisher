@@ -32,8 +32,22 @@ def is_staging():
     return DEPLOY_ENV == "staging"
 def is_production():
     return DEPLOY_ENV == "production"
-table_name = f'coa_publisher_{DEPLOY_ENV}'
 static_s3_bucket = 'https://joplin3-austin-gov-static.s3.amazonaws.com'
+table_name = f'coa_publisher_{DEPLOY_ENV}'
+
+def get_dynamodb_table():
+    dynamodb = boto3.resource('dynamodb')
+    return dynamodb.Table(table_name)
+
+
+'''
+"dynamodb.meta.client" is better than the standard "boto3.client('dynamodb')".
+boto3 will automatically encode our values with "dynamodb.meta.client", it won't with the default client.
+Further discussion: https://stackoverflow.com/questions/61844796/can-we-use-transact-write-items-without-specifying-attribute-types
+'''
+def get_dynamodb_client():
+    dynamodb = boto3.resource('dynamodb')
+    return dynamodb.meta.client
 
 
 # Returns the current datetime in central time
@@ -61,8 +75,7 @@ def get_janis_branch(build_id):
 
 # Returns build_item for a build_id
 def get_build_item(build_id):
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(table_name)
+    queue_table = get_dynamodb_table()
 
     build_pk, build_sk = parse_build_id(build_id)
     build = queue_table.get_item(
@@ -80,8 +93,7 @@ def get_build_item(build_id):
 # Get data for the BLD that's currently runnning for a janis_branch
 # Returns None if there isn't a CURRENT_BLD build_id set
 def get_current_build_item(janis_branch):
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(table_name)
+    queue_table = get_dynamodb_table()
 
     # Get the CURRENT_BLD for your janis_branch
     current_build_item = queue_table.get_item(
@@ -109,7 +121,7 @@ def get_current_build_item(janis_branch):
 # Replaces any non letter, number or "-" characters with "-"
 # 255 character limit
 def github_to_aws(branch_name):
-    return re.sub('[^\w\d-]','-',branch_name)[:255]
+    return re.sub('[^\\w\\d-]','-',branch_name)[:255]
 
 
 # Retrieve latest task definition ARN (with revision number)
@@ -130,8 +142,12 @@ def get_latest_task_definition(janis_branch):
         return None
 
 
+def get_joplin_url(joplin):
+    return f'https://{joplin}.herokuapp.com'
+
+
 def get_cms_api_url(joplin):
-    return f'https://{joplin}.herokuapp.com/api/graphql'
+    return f'{get_joplin_url(joplin)}/api/graphql'
 
 
 def get_cms_media_url(joplin_branch):
@@ -247,3 +263,14 @@ def get_janis_branch(build_id):
     build_pk, build_sk = parse_build_id(build_id)
     janis_branch = build_pk.split('#')[1]
     return janis_branch
+
+
+def has_empty_strings(data):
+    if isinstance(data, dict):
+        return any([has_empty_strings(v) for k,v in data.items()])
+    elif isinstance(data, list):
+        return any([has_empty_strings(v) for v in data])
+    elif data == "":
+        return True
+    else:
+        return False

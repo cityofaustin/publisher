@@ -1,4 +1,4 @@
-import os, boto3, json, sys
+import os, json, sys
 from boto3.dynamodb.conditions import Attr
 sys.path.append(os.path.join(os.path.dirname(__file__), '.')) # Allows absolute import of "helpers" as a module
 
@@ -7,12 +7,11 @@ from commands.register_janis_builder_task import register_janis_builder_task
 from commands.process_build_success import process_build_success
 from commands.process_build_failure import process_build_failure
 import helpers.stages as stages
-from helpers.utils import get_lambda_cloudwatch_url, parse_build_id, get_janis_branch, table_name
+from helpers.utils import get_lambda_cloudwatch_url, parse_build_id, get_janis_branch, get_dynamodb_table
 
 
 def handler(event, context):
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(table_name)
+    queue_table = get_dynamodb_table()
 
     sns_detail = json.loads(event["Records"][0]["Sns"]['Message'])['detail']
     for env_var in sns_detail['additional-information']['environment']['environment-variables']:

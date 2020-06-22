@@ -4,8 +4,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.'))  # Allows absolute
 from helpers.utils import \
     get_datetime, DEPLOY_ENV, \
     is_staging, is_production, \
+    get_dynamodb_table, \
     staging_janis_branch, staging_joplin_appname, \
-    production_janis_branch, production_joplin_appname
+    production_janis_branch, production_joplin_appname, \
+    has_empty_strings, PublisherDynamoError
 from helpers.valid_optional_env_vars import valid_optional_env_vars
 
 
@@ -22,8 +24,7 @@ def failure_res(message):
 
 
 def handler(event, context):
-    dynamodb = boto3.resource('dynamodb')
-    queue_table = dynamodb.Table(f'coa_publisher_{DEPLOY_ENV}')
+    queue_table = get_dynamodb_table()
     timestamp = get_datetime()
 
     # Validate body
@@ -75,17 +76,25 @@ def handler(event, context):
     ):
         return failure_res(f'[{build_type}] is not a valid build_type.')
 
-    # Validate page_ids
-    req_page_ids = data.get("page_ids")
-    if not req_page_ids:
-        page_ids = []
+    # Validate pages
+    api_key = data.get("api_key")
+    req_pages = data.get("pages")
+    if not req_pages:
+        pages = []
     else:
-        if not isinstance(req_page_ids, list):
-            return failure_res(f'page_ids must be a list.')
-        for page_id in req_page_ids:
-            if not isinstance(page_id, str):
-                return failure_res(f'page_id [{page_id}] is not a string.')
-        page_ids = req_page_ids
+        if not isinstance(req_pages, list):
+            return failure_res(f'pages must be a list.')
+        if has_empty_strings(req_pages):
+            return failure_res(f'Empty strings are not allowed in pages.')
+        for page in req_pages:
+            page["timestamp"] = timestamp
+
+        # The api_key is used to send a response back to Joplin on publish success.
+        # Not required for all requests, only ones that have specific pages that must be updated.
+        if not api_key:
+            return failure_res("api_key is required when updating specific pages")
+
+        pages = req_pages
 
     # Validate env_vars
     req_env_vars = data.get("env_vars")
@@ -93,11 +102,9 @@ def handler(event, context):
     if req_env_vars:
         if not isinstance(req_env_vars, dict):
             return failure_res(f'env_vars must be a dict.')
+        if has_empty_strings(req_env_vars):
+            return failure_res(f'Empty strings are not allowed in env_vars.')
         for name, value in req_env_vars.items():
-            if not isinstance(name, str):
-                return failure_res(f'key {name} in env_vars must be a string.')
-            if not isinstance(value, str):
-                return failure_res(f'value {value} in env_vars must be a string.')
             if name not in valid_optional_env_vars:
                 return failure_res(f'env_var {name} is not a valid_optional_env_var.')
         env_vars = req_env_vars
@@ -107,10 +114,11 @@ def handler(event, context):
             'pk': pk,
             'sk': sk,
             'status': status,
-            'page_ids': page_ids,
+            'pages': pages,
             'joplin': joplin,
             'env_vars': env_vars,
             'build_type': build_type,
+            'api_key': api_key,
         }
     )
 
@@ -120,6 +128,7 @@ def handler(event, context):
         "statusCode": 200,
         'headers': {'Content-Type': 'application/json'},
         "body": json.dumps({
-            "request_id": f'{pk}#{sk}',
+            "pk": pk,
+            "sk": sk
         })
     }
