@@ -13,5 +13,10 @@ Resources:
       WebsiteConfiguration:
         ErrorDocument: 404.html
         IndexDocument: index.html
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: ['*']
+            AllowedMethods: [GET]
+            AllowedHeaders: [Content-Length]
 
   # TODO: code-composable production structures, following pattern of what staging has.

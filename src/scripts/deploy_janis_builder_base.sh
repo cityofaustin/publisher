@@ -20,7 +20,7 @@ source $JANIS_BUILDER_BASE_D/ecr_uri.tmp
 
 # Deploys a new staging janis-builder-base docker image to the City of Austin dockerhub
 TAG="$JANIS_BUILDER_BASE_ECR_URI:$DEPLOY_ENV-latest"
-docker build -f $JANIS_BUILDER_BASE_D/janis-builder-base.Dockerfile -t $TAG --build-arg DEPLOY_ENV=$DEPLOY_ENV $JANIS_BUILDER_BASE_D
+docker build -f $JANIS_BUILDER_BASE_D/janis-builder-base.Dockerfile -t $TAG --build-arg DEPLOY_ENV=$DEPLOY_ENV $JANIS_BUILDER_BASE_D --no-cache
 docker push $TAG
 
 # janis-builder-base is used exclusively by codebuild as the base image to build new janis-builder images.
