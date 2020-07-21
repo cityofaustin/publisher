@@ -14,6 +14,11 @@ Resources:
       WebsiteConfiguration:
         ErrorDocument: 404.html
         IndexDocument: index.html
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: ['*']
+            AllowedMethods: [GET]
+            AllowedHeaders: [Content-Length]
 
   # Allows StagingCloudfrontDistribution to access bucket
   StagingBucketBucketPolicy:
@@ -69,6 +74,7 @@ Resources:
             Cookies:
               Forward: none
             QueryString: False
+          Compress: True
         IPV6Enabled: True
         Enabled: True
         Comment: "Janis Staging"
