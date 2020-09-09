@@ -2,6 +2,7 @@
 set -a
 D=`dirname $BASH_SOURCE`
 source $D/../../.env # Source environment variables
+sh $D/../utils/check_mandatory_vars.sh
 
 # Sync files to be used as codebuild source
 # codebuild looks in S3 to get the Dockerfile used to build branch-publisher containers
