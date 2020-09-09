@@ -211,6 +211,13 @@ def get_netlify_site_name(janis_branch):
         return (f'janis-v3-{janis_branch.lower()}')[:63]
 
 
+def get_api_password():
+  return os.getenv("API_PASSWORD")
+
+
+def get_api_username():
+  return os.getenv("API_USERNAME")
+
 '''
     These are the environment variables that get passed into janis_builder container.
     They are all accessible by janis_builder_base/scripts/build_site.sh
@@ -228,6 +235,8 @@ def get_janis_builder_factory_env_vars(build_item):
         "CMS_DOCS": get_cms_docs(joplin_branch),
         "GOOGLE_ANALYTICS": get_google_analytics(),
         "CLOUDFRONT_DISTRIBUTION_ID": get_cloudfront_distribution_id(),
+        "API_PASSWORD": get_api_password(),
+        "API_USERNAME": get_api_username(),
     }
 
     optional_env_vars = {}
