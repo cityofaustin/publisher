@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
+set -a
 D=`dirname $BASH_SOURCE`
 source $D/../../.env # Source environment variables
 JANIS_BUILDER_BASE_D=$D/../janis_builder_base
+sh $D/../utils/check_mandatory_vars.sh
 
 function clean_up {
   if [ -f "$JANIS_BUILDER_BASE_D/ecr_uri.tmp" ]; then

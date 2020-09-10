@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
+set -a
 D=`dirname $BASH_SOURCE`
+sh $D/../utils/check_mandatory_vars.sh
 
 aws cloudformation deploy \
   --template-file $D/../templates/persistent.yml \

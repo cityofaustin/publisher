@@ -7,6 +7,6 @@
   "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.601.0",
-    "netlify": "^3.1.0"
+    "netlify": "^4.3.13"
   }
 }

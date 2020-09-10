@@ -15,6 +15,7 @@ However, you can create your own PR/Test environment in AWS.
 The .env file is very important. The DEPLOY_ENV you set in .env will create/update whichever stack you set. Every deployment script in `/src/scripts/` will read from .env to determine which environment they will update.
   - If you set `DEPLOY_ENV=production`, then running your scripts will update production.
   - If you set `DEPLOY_ENV=staging`, then running your scripts will update staging.
+  - If you set `DEPLOY_ENV=review`, then running your scripts will update the Publisher used for PR review apps.
   - If you set `DEPLOY_ENV=myTestPublisher`, for example, then running your scripts will create a new Publisher stack called "myTestPublisher". Every single piece of the Publisher will be recreated for your test Publisher (with the exception of Resources in src/templates/persistent.yml, which are shared by all environments). You can safely Publish to "myTestPublisher" without the threat of impacting staging or production. This is how we'll test and develop new features for the Publisher.
 
 When creating a test Publisher please adhere to these conventions:

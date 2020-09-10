@@ -3,6 +3,7 @@ set -a
 D=`dirname $BASH_SOURCE`
 PREV_D=$(pwd)
 source $D/../../.env # Source environment variables
+sh $D/../utils/check_mandatory_vars.sh
 
 function clean_up {
   cd $PREV_D
