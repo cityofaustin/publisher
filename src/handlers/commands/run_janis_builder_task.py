@@ -1,6 +1,7 @@
+# runs if build_type is "all_pages" or "incremental"
 import os, boto3, json
 
-from helpers.utils import get_cms_api_url, parse_build_id, get_janis_branch, get_dynamodb_table, get_api_password, get_api_username
+from helpers.utils import get_cms_api_url, parse_build_id, get_janis_branch, get_dynamodb_table, get_api_credentials
 import helpers.stages as stages
 from helpers.valid_optional_env_vars import valid_optional_env_vars
 
@@ -11,8 +12,7 @@ def run_janis_builder_task(build_item, latest_task_definition):
     build_id = build_item['build_id']
     build_pk, build_sk = parse_build_id(build_id)
     janis_branch = get_janis_branch(build_id)
-    api_password = get_api_password()
-    api_username = get_api_username()
+    api_password, api_username = get_api_credentials()
 
     # Start the Task
     print(f'##### Running janis_builder task for [{build_id}]')

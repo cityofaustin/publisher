@@ -210,13 +210,24 @@ def get_netlify_site_name(janis_branch):
     else:
         return (f'janis-v3-{janis_branch.lower()}')[:63]
 
+def get_api_credentials():
+  ssm_client = boto3.client('ssm')
+  deployment_mode = get_deployment_mode()
+  if deployment_mode == 'PRODUCTION':
+    username_parameter_name = '/janis-builder/production/username'
+    password_parameter_name = '/janis-builder/production/password'
+  elif deployment_mode = 'STAGING':
+    username_parameter_name = '/janis-builder/staging/username'
+    password_parameter_name = '/janis-builder/staging/password'
+  else:
+    username_parameter_name = '/janis-builder/review/username'
+    password_parameter_name = '/janis-builder/review/password'
 
-def get_api_password():
-  return os.getenv("API_PASSWORD")
+  username_parameter = ssm_client.get_parameter(Name=username_parameter_name, WithDecryption=True)
+  password_parameter = ssm_client.get_parameter(Name=password_parameter_name, WithDecryption=True)
 
+  return(username_parameter['Parameter']['Value'], password_parameter['Parameter']['Value'])
 
-def get_api_username():
-  return os.getenv("API_USERNAME")
 
 '''
     These are the environment variables that get passed into janis_builder container.
@@ -225,6 +236,7 @@ def get_api_username():
 def get_janis_builder_factory_env_vars(build_item):
     janis_branch = get_janis_branch(build_item["build_id"])
     joplin_branch = get_joplin_branch(build_item["joplin"])
+    api_password, api_username = get_api_credentials()
     required_env_vars = {
         "JANIS_BRANCH": janis_branch,
         "BUILD_ID": build_item["build_id"],
@@ -235,8 +247,8 @@ def get_janis_builder_factory_env_vars(build_item):
         "CMS_DOCS": get_cms_docs(joplin_branch),
         "GOOGLE_ANALYTICS": get_google_analytics(),
         "CLOUDFRONT_DISTRIBUTION_ID": get_cloudfront_distribution_id(),
-        "API_PASSWORD": get_api_password(),
-        "API_USERNAME": get_api_username(),
+        "API_PASSWORD": api_password,
+        "API_USERNAME": api_username,
     }
 
     optional_env_vars = {}
