@@ -216,7 +216,7 @@ def get_api_credentials():
   if deployment_mode == 'PRODUCTION':
     username_parameter_name = '/janis-builder/production/username'
     password_parameter_name = '/janis-builder/production/password'
-  elif deployment_mode = 'STAGING':
+  elif deployment_mode == 'STAGING':
     username_parameter_name = '/janis-builder/staging/username'
     password_parameter_name = '/janis-builder/staging/password'
   else:
