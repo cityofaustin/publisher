@@ -5,10 +5,11 @@ The Publisher entirely consists of AWS resources, therefore there is no way to r
 However, you can create your own PR/Test environment in AWS.
 
 ## Things you need to install:
-1. Install aws cli and add crendentials to your machine.
-2. Install the Serverless Framework `npm install -g serverless`/`npm update -g serverless`. https://serverless.com/framework/docs/getting-started/
-3. Install the helper packages for Serverless `yarn install`.
-4. Install python dependencies with `pipenv install`
+1. Run `pipenv install` to install local python dependencies.
+  - This step will also install the correct "version 1" version of aws-cli, which can be used with `pipenv run aws`.
+2. Add aws crendentials to your machine for use with awscli. https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
+3. Install the Serverless Framework `yarn global serverless@1.68.0`. https://serverless.com/framework/docs/getting-started/
+4. Install the helper packages for Serverless with `yarn install`.
 5. Add a .env file and fill it out your own credentials `cp .template.env .env`.
 
 ## How test environments work

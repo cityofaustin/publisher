@@ -4,17 +4,17 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-awscli = "==1.16.248"
+awscli = "==1.18.142"
 pytest-mock = "==3.1.0"
 mock = "==4.0.2"
 pytest-env = "==0.6.2"
+pytest-dynamodb = "==2.0.1"
 
 [packages]
 boto3 = "==1.13.11"
 botocore = "==1.16.11"
 pytz = "==2020.1"
 requests = "==2.23.0"
-pytest-dynamodb = "==2.0.1"
 
 [requires]
 python_version = "3.7"
