@@ -6,6 +6,11 @@
 
 The Publisher is a microservice used to manage Janis PR deployments on netlify. It allows you to plug in your own environment variables into Janis deployments. It also enables publishing from Joplin PR builds to Janis PR builds.
 
+## Requirements
+
+- Install aws cli *version 1*. Version 2 will break one deployment script, see issue: https://github.com/cityofaustin/techstack/issues/4955
+  - https://docs.aws.amazon.com/cli/latest/userguide/install-macos.html
+
 ## Documentation
 
 - [Architectural Diagram](/docs/diagram.md)
