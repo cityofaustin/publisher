@@ -8,7 +8,7 @@ The Publisher is a microservice used to manage Janis PR deployments on netlify. 
 
 ## Requirements
 
-- Install aws cli *version 1*. Version 2 will break one deployment script, see issue: https://github.com/cityofaustin/techstack/issues/4955
+- Install aws cli **version 1**. Version 2 will break one deployment script, see issue: https://github.com/cityofaustin/techstack/issues/4955
   - https://docs.aws.amazon.com/cli/latest/userguide/install-macos.html
 
 ## Documentation
