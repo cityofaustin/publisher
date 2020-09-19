@@ -80,6 +80,10 @@ provider:
         - s3:GetBucketLocation
         - s3:GetObject
       Resource: 'arn:aws:s3:::coa-publisher/*'
+    - Effect: Allow
+      Action:
+        -  ssm:GetParameter
+      Resource: '*'
   apiKeys:
     - name: coa-publisher-${env:DEPLOY_ENV}-janis
       description: "API key for requests from janis github pushes"
@@ -168,3 +172,4 @@ resources:
   - ${file(src/templates/policies.yml)}
   - ${file(src/templates/staging.yml)}
   - ${file(src/templates/production.yml)}
+  - ${file(src/templates/outputs.yml)}

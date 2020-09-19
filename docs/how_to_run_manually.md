@@ -25,4 +25,4 @@ apiKeys:
 
 You're going to want to use the "-dev" key. The values for these keys is kept secret, there can be found in AWS => Stacks => coa-publisher-{DEPLOY_ENV} => Resources => ApiGatewayApiKey3.
 
-- `PUBLISH_REQUEST_URL` is the URL for triggered the "publish_request" lambda function. This can be found in AWS => Stacks => coa-publisher-{DEPLOY_ENV} => Outputs => ServiceEndpoint. Append a "/publish-request" to the end of the ServiceEndpoint URL listed.
+- `PUBLISH_REQUEST_URL` is the URL for triggered the "publish_request" lambda function. This can be found in AWS => Cloudformation => Stacks => coa-publisher-{DEPLOY_ENV} => Outputs => PublishRequestEndpoint.

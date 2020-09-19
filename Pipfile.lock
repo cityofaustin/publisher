@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "afd53518773f039fedf7b7a9f14adf2ca943e9f3135e0612d20ea49ecdd5513c"
+            "sha256": "db433f8f95e2849c4c5bb726f2c522c9b0b0efeb6b8e60c3f0d884dcffbbf04e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -110,6 +110,14 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==1.15.0"
+        },
+        "slack-webhook": {
+            "hashes": [
+                "sha256:5efd898c1d4befbd45ee00c7cf29e2b1676278e8d6ae9212ece993b9d35f4caa",
+                "sha256:babf36c4921e848ba70a77eeb57ae9e781a8d9bca10d2688515092006477f25a"
+            ],
+            "index": "pypi",
+            "version": "==1.0.3"
         },
         "urllib3": {
             "hashes": [

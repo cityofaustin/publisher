@@ -1,0 +1,13 @@
+Outputs:
+  # Same logic that sls uses to generate "ServiceEndpoint" Output, but with the addition of "/publish-request"
+  PublishRequestEndpoint:
+    Description: "The public endpoint for Joplin publishes or Janis github builds to submit a publish request"
+    Value:
+      Fn::Join:
+        - ''
+        - - "https://"
+          - !Ref ApiGatewayRestApi
+          - ".execute-api.${self:provider.region}."
+          - !Ref AWS::URLSuffix
+          - "/${self:provider.stage}"
+          - "/publish-request"
