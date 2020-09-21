@@ -236,7 +236,7 @@ def get_api_credentials():
 def get_janis_builder_factory_env_vars(build_item):
     janis_branch = get_janis_branch(build_item["build_id"])
     joplin_branch = get_joplin_branch(build_item["joplin"])
-    api_password, api_username = get_api_credentials()
+    api_username, api_password = get_api_credentials()
     required_env_vars = {
         "JANIS_BRANCH": janis_branch,
         "BUILD_ID": build_item["build_id"],

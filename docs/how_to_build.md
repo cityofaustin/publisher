@@ -70,3 +70,6 @@ For a "rebuild" build_type:
 
 Then for "all_pages" and "incremental" build_types:
 1. Add to `handlers/commands/run_janis_builder_task`
+
+## Now that you have your publisher built
+Check out `how_to_run_manually` 
