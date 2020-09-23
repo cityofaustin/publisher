@@ -5,10 +5,11 @@ The Publisher entirely consists of AWS resources, therefore there is no way to r
 However, you can create your own PR/Test environment in AWS.
 
 ## Things you need to install:
-1. Install aws cli and add crendentials to your machine.
-2. Install the Serverless Framework `npm install -g serverless`/`npm update -g serverless`. https://serverless.com/framework/docs/getting-started/
-3. Install the helper packages for Serverless `yarn install`.
-4. Install python dependencies with `pipenv install`
+1. Run `pipenv install` to install local python dependencies.
+  - This step will also install the correct "version 1" version of aws-cli, which can be used with `pipenv run aws`.
+2. Add aws crendentials to your machine for use with awscli. https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
+3. Install the Serverless Framework `yarn global serverless@1.68.0`. https://serverless.com/framework/docs/getting-started/
+4. Install the helper packages for Serverless with `yarn install`.
 5. Add a .env file and fill it out your own credentials `cp .template.env .env`.
 
 ## How test environments work
@@ -57,6 +58,14 @@ We have 4 scripts used to deploy the Publisher. Not all 4 of them should be run 
 ## If you update Pipfile dependencies
 `pipenv lock -r > src/handlers/requirements.txt` to update the requirements that go into the lambda function for your specific handler. Root Pipfile should still exist for dev administrative tasks (like deployment) that are distinct from lambda execution.
 
+## Connect your new Publisher to (Janis Github) or Joplin
+To submit publish requests to your new Publisher, you'll have to add the URL and API_KEY from your new Publisher to the services that you want to connect to it.
+
+- The URL for your new publisher can be found in the Stack Outputs. AWS Console => Cloudformation => Stacks => coa-publisher-{DEPLOY_ENV} => Outputs => PublishRequestEndpoint
+- The ApiKey can be found in the Stack Resources. AWS Console => Cloudformation => Stacks => coa-publisher-{DEPLOY_ENV} => Resources => ApiGatewayApiKey (1-3)
+  - There are 3 api keys in the output. All of them work equally. But they are separated so as to not disrupt service on every app in case one of them gets compromised. There's one for Janis (github triggered builds), Joplin (Joplin publish triggered builds), and dev (manually triggered builds by a dev on their local machine). So if the "dev" key gets leaked/compromised, then that api key can be deleted/changed without creating downtime for Janis + Joplin. That's why there are 3 api keys. But again, they all authenticate your /publish-request endpoint the same way.
+
+
 ## Adding support for additional environment variables
 Let's say that we decide that our janis_builder build_site.sh needs access to new environment variables. There is a bit of chaining required in order to make sure those environment variables finally get into the janis_builder docker container.
 
@@ -67,9 +76,10 @@ For a "rebuild" build_type:
   - Remember to run step (2) `sh scripts/deploy_codebuild_source.sh` to push those changes!
 4. Add to `handlers/helpers/valid_optional_env_vars` if it's an optional environment variable that is passed in with a publish_request's "env_vars" param.
 
-
 Then for "all_pages" and "incremental" build_types:
 1. Add to `handlers/commands/run_janis_builder_task`
 
-## Now that you have your publisher built
-Check out `how_to_run_manually` 
+## Slack integration
+We send a message to slack if there is a build failure on our Production DEPLOY_ENV. We followed these instructions to build a slack app that will post incoming webhook messages to a slack channel: https://api.slack.com/messaging/webhooks
+
+The webhook URL is a secret, which we store in aws SSM Parameter Store. This URL was added to SSM manually with the name "slack_webhook_publisher_errors". https://console.aws.amazon.com/systems-manager/parameters/?region=us-east-1

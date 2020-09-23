@@ -172,3 +172,4 @@ resources:
   - ${file(src/templates/policies.yml)}
   - ${file(src/templates/staging.yml)}
   - ${file(src/templates/production.yml)}
+  - ${file(src/templates/outputs.yml)}

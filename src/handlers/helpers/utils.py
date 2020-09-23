@@ -1,6 +1,7 @@
 import os, boto3, re, io
 from datetime import datetime
 from pytz import timezone
+from decimal import Decimal
 
 from helpers.valid_optional_env_vars import valid_optional_env_vars
 
@@ -295,3 +296,12 @@ def has_empty_strings(data):
         return True
     else:
         return False
+
+
+# Decimal values can't be parsed by json.dumps()
+# Any numeric value returned from a Dynamodb item will be a Decimal type. (such as a page's id and author)
+def stringify_decimal(obj):
+    if isinstance(obj, Decimal):
+        return str(obj)
+    else:
+        return obj
