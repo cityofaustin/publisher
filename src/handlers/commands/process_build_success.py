@@ -1,4 +1,3 @@
-import os, boto3, json
 import dateutil.parser
 from boto3.dynamodb.conditions import Key
 
@@ -32,7 +31,7 @@ def process_build_success(build_id, context):
         IndexName="build_id.janis",
         Select='ALL_ATTRIBUTES',
         ScanIndexForward=True,
-        KeyConditionExpression= Key('build_id').eq(build_id) & Key('pk').eq(req_pk)
+        KeyConditionExpression=Key('build_id').eq(build_id) & Key('pk').eq(req_pk)
     )['Items']
 
     write_item_batches = []

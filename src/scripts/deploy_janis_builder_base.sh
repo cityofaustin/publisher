@@ -13,12 +13,15 @@ function clean_up {
 }
 trap clean_up EXIT
 
-# Get Auth token in order to push docker image to ECR
-$(aws ecr get-login --no-include-email)
-
-# Get ECR Repo URI from Stack Outputs
+# Get $JANIS_BUILDER_BASE_ECR_URI from Stack Outputs
 pipenv run python $JANIS_BUILDER_BASE_D/get_ecr_uri.py
 source $JANIS_BUILDER_BASE_D/ecr_uri.tmp
+
+# Get Auth token in order to push docker image to ECR
+$(pipenv run aws ecr get-login --no-include-email)
+# If we upgrade to aws-cli version 2, the get-login command will be deprecated.
+# And you'll need to replace the logic above with this line:
+# pipenv run aws ecr get-login-password | docker login --username AWS --password-stdin $JANIS_BUILDER_BASE_ECR_URI
 
 # Deploys a new staging janis-builder-base docker image to the City of Austin dockerhub
 TAG="$JANIS_BUILDER_BASE_ECR_URI:$DEPLOY_ENV-latest"
@@ -31,12 +34,12 @@ docker push $TAG
 
 # Remove codebuild docker image cache
 echo "Clearing codebuild janis-builder-base image cache"
-aws codebuild update-project \
+pipenv run aws codebuild update-project \
   --name coa-publisher-janis-builder-factory-$DEPLOY_ENV \
   --cache type=NO_CACHE \
 > /dev/null
 
-aws codebuild update-project \
+pipenv run aws codebuild update-project \
   --name coa-publisher-janis-builder-factory-$DEPLOY_ENV \
   --cache type=LOCAL,modes=[LOCAL_DOCKER_LAYER_CACHE] \
 > /dev/null

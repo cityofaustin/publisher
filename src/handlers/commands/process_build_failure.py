@@ -1,8 +1,12 @@
 import dateutil.parser
 from boto3.dynamodb.conditions import Key
+import json
+import boto3
+from slack_webhook import Slack
 
 from helpers.utils import get_datetime, get_build_item, get_janis_branch, \
-    table_name, get_dynamodb_table, get_dynamodb_client
+    table_name, get_dynamodb_table, get_dynamodb_client, is_production, \
+    stringify_decimal
 
 
 def process_build_failure(build_id, context):
@@ -101,3 +105,14 @@ def process_build_failure(build_id, context):
     for write_item_batch in write_item_batches:
         client.transact_write_items(TransactItems=write_item_batch)
     print(f"##### Build failure processing for [{build_id}] is complete.")
+
+    # Notify slack channel if there are errors in Production
+    if is_production():
+        ssm_client = boto3.client('ssm')
+        webhook_url = ssm_client.get_parameter(Name="/coa-publisher/production/slack_webhook_publisher_errors", WithDecryption=True)['Parameter']['Value']
+        # refreshed_build_item will have most up to date "logs" urls and "status"
+        refreshed_build_item = get_build_item(build_id)
+        slack_message = "Janis build failed\n"
+        slack_message += f"```{json.dumps(refreshed_build_item, default=stringify_decimal, indent=4)}```"
+        slack = Slack(url=webhook_url)
+        slack.post(text=slack_message)

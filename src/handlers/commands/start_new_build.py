@@ -1,4 +1,3 @@
-import os, boto3, json
 from boto3.dynamodb.conditions import Key
 
 from helpers.utils import get_datetime, get_lambda_cloudwatch_url, get_current_build_item, \

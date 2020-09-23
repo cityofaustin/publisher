@@ -1,16 +1,6 @@
 import requests, json
-from decimal import Decimal
 
-from helpers.utils import get_joplin_url
-
-
-# Decimal values can't be parsed by json.dumps()
-# Any numeric value returned from Dynamodb will be a Decimal type. (such as a page's id and author)
-def stringify_decimal(obj):
-    if isinstance(obj, Decimal):
-        return str(obj)
-    else:
-        return obj
+from helpers.utils import get_joplin_url, stringify_decimal
 
 
 def send_publish_succeeded_message(build_item):
