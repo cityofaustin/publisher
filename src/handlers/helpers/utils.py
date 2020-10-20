@@ -211,13 +211,12 @@ def get_netlify_site_name(janis_branch):
     else:
         return (f'janis-v3-{janis_branch.lower()}')[:63]
 
-def get_api_credentials():
+def get_api_credentials(joplin_branch):
   ssm_client = boto3.client('ssm')
-  deployment_mode = get_deployment_mode()
-  if deployment_mode == 'PRODUCTION':
+  if joplin_branch == 'production':
     username_parameter_name = '/janis-builder/production/username'
     password_parameter_name = '/janis-builder/production/password'
-  elif deployment_mode == 'STAGING':
+  elif joplin_branch == 'master':
     username_parameter_name = '/janis-builder/staging/username'
     password_parameter_name = '/janis-builder/staging/password'
   else:
@@ -237,7 +236,7 @@ def get_api_credentials():
 def get_janis_builder_factory_env_vars(build_item):
     janis_branch = get_janis_branch(build_item["build_id"])
     joplin_branch = get_joplin_branch(build_item["joplin"])
-    api_username, api_password = get_api_credentials()
+    api_username, api_password = get_api_credentials(joplin_branch)
     required_env_vars = {
         "JANIS_BRANCH": janis_branch,
         "BUILD_ID": build_item["build_id"],
