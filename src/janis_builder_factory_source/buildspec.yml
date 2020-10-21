@@ -41,6 +41,8 @@ phases:
         --build-arg CMS_DOCS="$CMS_DOCS"
         --build-arg REACT_STATIC_PREFETCH_RATE="$REACT_STATIC_PREFETCH_RATE"
         --build-arg GOOGLE_ANALYTICS="$GOOGLE_ANALYTICS"
+        --build-arg API_PASSWORD="$API_PASSWORD"
+        --build-arg API_USERNAME="$API_USERNAME"
         .
   post_build:
     commands:
