@@ -6,7 +6,7 @@
   "author": "Niicck <niicck@users.noreply.github.com>",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.601.0",
+    "aws-sdk": "^2.814.0",
     "netlify": "^4.3.13"
   }
 }
